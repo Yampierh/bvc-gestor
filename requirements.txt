@@ -1,0 +1,71 @@
+
+# Core Python (GUI)
+
+PyQt6==6.10.1
+
+PyQt6-Qt6==6.10.1
+
+PyQt6-sip==13.10.3
+
+
+
+# Base de datos
+
+SQLAlchemy==2.0.45
+
+alembic==1.15.1
+
+
+
+# Análisis de datos
+
+numpy==2.4.0
+
+pandas==2.3.3
+
+
+
+# Reportes y utilidades
+
+reportlab==4.3.1
+
+openpyxl==3.1.5
+
+Pillow==11.3.0
+
+qrcode==8.2
+
+Jinja2==3.1.5
+
+python-dateutil==2.9.0
+
+python-dotenv==1.0.1
+
+
+
+# Seguridad y Utilidades
+
+pycryptodome==3.21.0
+
+watchdog==6.0.0
+
+click==8.1.8
+
+colorama==0.4.6
+
+
+
+# Desarrollo y Calidad
+
+pytest==8.3.4
+
+black==24.10.0
+
+flake8==7.1.1
+
+mypy==1.14.1
+
+pre-commit==4.1.0
+
+
+

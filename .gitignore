@@ -1,0 +1,79 @@
+
+# Entorno virtual
+
+venv/
+
+.env
+
+__pycache__/
+
+*.py[cod]
+
+*$py.class
+
+
+
+# Base de datos y datos locales
+
+data/database/*.db
+
+data/backups/
+
+data/reports/
+
+data/exports/
+
+data/imports/
+
+
+
+# Configuraciones locales
+
+*.local
+
+*.env.local
+
+
+
+# Logs
+
+*.log
+
+logs/
+
+
+
+# IDE
+
+.vscode/
+
+.idea/
+
+*.swp
+
+*.swo
+
+
+
+# Sistema operativo
+
+.DS_Store
+
+Thumbs.db
+
+
+
+# Backup files
+
+*.bak
+
+*.backup
+
+
+
+# Temporal
+
+temp/
+
+tmp/
+
