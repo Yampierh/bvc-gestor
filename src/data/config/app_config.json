@@ -1,0 +1,28 @@
+{
+  "general": {
+    "nombre_aplicacion": "BVC-GESTOR",
+    "version": "1.0.0",
+    "modo_oscuro": true,
+    "idioma": "es",
+    "moneda_principal": "USD"
+  },
+  "comisiones": {
+    "comision_base": 0.005,
+    "iva": 0.16,
+    "comision_minima": 1.0,
+    "comision_maxima": 1000.0
+  },
+  "backup": {
+    "auto_backup": true,
+    "frecuencia_backup": "diario",
+    "max_backups_diarios": 7,
+    "max_backups_semanales": 4,
+    "max_backups_mensuales": 12
+  },
+  "reportes": {
+    "formato_predeterminado": "PDF",
+    "ruta_guardado": "c:\\Users\\yampi\\Documents\\Proyectos\\BVC-GESTOR\\src\\data\\reports",
+    "incluir_logo": true,
+    "firma_digital": false
+  }
+}

@@ -185,7 +185,7 @@ class CuentaRepository(BaseRepository):
             return []
     
     def update_balance(self, cuenta_id: int, moneda: str, monto: float, 
-                      tipo: str = 'disponible') -> bool:
+                    tipo: str = 'disponible') -> bool:
         """Actualizar saldo de cuenta"""
         try:
             cuenta = self.get(cuenta_id)
@@ -336,5 +336,34 @@ class RepositoryFactory:
             'configuracion': BaseRepository,
         }
         
-        repo_class = repositories.get(model_type, BaseRepository)
-        return repo_class(db, globals().get(f"{model_type.capitalize()}DB"))
+        repo_class = repositories.get(model_type)
+        if repo_class:
+            if repo_class == BaseRepository:
+                return repo_class(db, get_model_class(model_type))
+            else:
+                # Para repositorios específicos que solo necesitan db
+                return repo_class(db)
+        
+        return None
+
+def get_model_class(model_type: str):
+    """Obtener clase de modelo por tipo"""
+    from .models_sql import (
+        ClienteDB, CuentaDB, ActivoDB, OrdenDB,
+        TransaccionDB, PortafolioItemDB, MovimientoDB,
+        DocumentoDB, ConfiguracionDB
+    )
+    
+    model_map = {
+        'cliente': ClienteDB,
+        'cuenta': CuentaDB,
+        'activo': ActivoDB,
+        'orden': OrdenDB,
+        'transaccion': TransaccionDB,
+        'portafolio': PortafolioItemDB,
+        'movimiento': MovimientoDB,
+        'documento': DocumentoDB,
+        'configuracion': ConfiguracionDB,
+    }
+    
+    return model_map.get(model_type, None)

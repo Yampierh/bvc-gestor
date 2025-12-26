@@ -3,7 +3,7 @@
 Motor de base de datos SQLite con SQLAlchemy
 """
 import os
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
 from sqlalchemy.pool import StaticPool
 from typing import Optional
@@ -75,6 +75,9 @@ class DatabaseEngine:
             
             logger.info(f"Base de datos inicializada en: {db_path}")
             
+            # Probar conexión inmediatamente
+            self.test_connection()
+            
         except Exception as e:
             logger.error(f"Error inicializando base de datos: {str(e)}")
             raise
@@ -117,8 +120,12 @@ class DatabaseEngine:
         """Probar conexión a la base de datos"""
         try:
             with self._engine.connect() as conn:
-                result = conn.execute("SELECT 1").fetchone()
-                return result[0] == 1
+                # Usar text() para crear una sentencia SQL ejecutable
+                result = conn.execute(text("SELECT 1")).fetchone()
+                connected = result[0] == 1
+                if connected:
+                    logger.info("✓ Conexión a base de datos exitosa")
+                return connected
         except Exception as e:
             logger.error(f"Error probando conexión: {str(e)}")
             return False

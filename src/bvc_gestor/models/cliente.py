@@ -7,10 +7,7 @@ from datetime import datetime
 from typing import Optional, List
 from enum import Enum
 from ..utils.validators_venezuela import validar_cedula, validar_rif, validar_telefono_venezolano
-
-class TipoCliente(str, Enum):
-    NATURAL = "Natural"
-    JURIDICO = "Jurídico"
+from ..utils.constants import TipoPersona, TipoDocumento, PerfilRiesgo
 
 class EstadoCivil(str, Enum):
     SOLTERO = "Soltero/a"
@@ -24,7 +21,8 @@ class Cliente:
     
     # Información básica
     id: str  # Cédula o RIF
-    tipo: TipoCliente
+    tipo_persona: TipoPersona
+    tipo_documento: TipoDocumento
     nombre_completo: str
     fecha_nacimiento: Optional[datetime] = None
     estado_civil: Optional[EstadoCivil] = None
@@ -40,7 +38,7 @@ class Cliente:
     codigo_postal: Optional[str] = None
     
     # Información financiera
-    perfil_riesgo: str = "Moderado"  # Conservador, Moderado, Agresivo
+    perfil_riesgo: PerfilRiesgo = PerfilRiesgo.MODERADO
     limite_inversion_bs: float = 0.0
     limite_inversion_usd: float = 0.0
     ingresos_mensuales_bs: Optional[float] = None
@@ -73,7 +71,7 @@ class Cliente:
     def validar_datos(self):
         """Validar datos del cliente según normas venezolanas"""
         # Validar identificación
-        if self.tipo == TipoCliente.NATURAL:
+        if self.tipo_persona == TipoPersona.NATURAL:
             if not validar_cedula(self.id):
                 raise ValueError(f"Cédula inválida: {self.id}")
         else:  # Jurídico
@@ -103,10 +101,10 @@ class Cliente:
         return {
             'id': self.id,
             'nombre': self.nombre_completo,
-            'tipo': self.tipo.value,
+            'tipo': self.tipo_persona.value,
             'telefono': self.telefono_principal,
             'email': self.email,
-            'perfil_riesgo': self.perfil_riesgo,
+            'perfil_riesgo': self.perfil_riesgo.value,
             'fecha_registro': self.fecha_registro.strftime('%Y-%m-%d'),
             'activo': self.activo
         }
@@ -115,7 +113,8 @@ class Cliente:
         """Convertir a diccionario para serialización"""
         data = {
             'id': self.id,
-            'tipo': self.tipo.value,
+            'tipo_persona': self.tipo_persona.value,
+            'tipo_documento': self.tipo_documento.value,
             'nombre_completo': self.nombre_completo,
             'fecha_nacimiento': self.fecha_nacimiento.isoformat() if self.fecha_nacimiento else None,
             'estado_civil': self.estado_civil.value if self.estado_civil else None,
@@ -127,7 +126,7 @@ class Cliente:
             'ciudad': self.ciudad,
             'estado': self.estado,
             'codigo_postal': self.codigo_postal,
-            'perfil_riesgo': self.perfil_riesgo,
+            'perfil_riesgo': self.perfil_riesgo.value,
             'limite_inversion_bs': self.limite_inversion_bs,
             'limite_inversion_usd': self.limite_inversion_usd,
             'ingresos_mensuales_bs': self.ingresos_mensuales_bs,
@@ -149,8 +148,12 @@ class Cliente:
     def from_dict(cls, data: dict) -> 'Cliente':
         """Crear cliente desde diccionario"""
         # Convertir strings a enums
-        if 'tipo' in data:
-            data['tipo'] = TipoCliente(data['tipo'])
+        if 'tipo_persona' in data:
+            data['tipo_persona'] = TipoPersona(data['tipo_persona'])
+        if 'tipo_documento' in data:
+            data['tipo_documento'] = TipoDocumento(data['tipo_documento'])
+        if 'perfil_riesgo' in data:
+            data['perfil_riesgo'] = PerfilRiesgo(data['perfil_riesgo'])
         if 'estado_civil' in data and data['estado_civil']:
             data['estado_civil'] = EstadoCivil(data['estado_civil'])
         

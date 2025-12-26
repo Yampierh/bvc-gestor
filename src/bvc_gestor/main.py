@@ -1,4 +1,4 @@
-# src/bvc_gestor/main.py
+# src/bvc_gestor/main.py - VERSIÓN CORREGIDA PARA PyQt6
 """
 Punto de entrada principal de la aplicación BVC-GESTOR
 """
@@ -11,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFontDatabase, QIcon
+from PyQt6.QtGui import QFont
 
 from .ui.main_window import MainWindow
 from .utils.logger import logger
@@ -59,7 +59,7 @@ class BVCGestorApp:
         logger.info("✓ Estado de aplicación inicializado")
     
     def setup_application(self):
-        """Configurar aplicación PyQt6"""
+        """Configurar aplicación PyQt6 - CORREGIDO PARA PyQt6"""
         logger.info("Configurando aplicación PyQt6...")
         
         # Crear aplicación
@@ -71,24 +71,31 @@ class BVCGestorApp:
         # Configurar estilo
         self.app.setStyle('Fusion')
         
-        # Configurar fuente
-        font_db = QFontDatabase()
-        available_fonts = font_db.families()
+        # Configurar fuente - Versión simplificada para PyQt6
+        try:
+            # Configurar fuente directamente sin QFontDatabase
+            app_font = QFont("Arial", 10)
+            self.app.setFont(app_font)
+            logger.info("✓ Fuente configurada: Arial")
+            
+        except Exception as e:
+            logger.warning(f"No se pudo configurar fuente: {e}")
+            # Usar fuente por defecto
         
-        # Preferir fuentes modernas
-        preferred_fonts = ['Segoe UI', 'Arial', 'Helvetica', 'Roboto', 'Open Sans']
-        for font in preferred_fonts:
-            if font in available_fonts:
-                self.app.setFont(font_db.font(font, '', 10))
-                logger.info(f"✓ Fuente configurada: {font}")
-                break
-        
-        # Configurar icono (se agregará más tarde)
-        # app_icon = QIcon(str(Path(__file__).parent / "assets" / "icons" / "app-icon.png"))
-        # self.app.setWindowIcon(app_icon)
-        
-        # Configurar atributos de la aplicación
-        self.app.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps)
+        # Configurar atributos de la aplicación - CORREGIDO para PyQt6
+        try:
+            # En PyQt6, el atributo se llama diferente
+            # PyQt5: Qt.AA_UseHighDpiPixmaps
+            # PyQt6: Qt.ApplicationAttribute.AA_UseHighDpiPixmaps
+            # Pero verifiquemos qué atributos existen realmente
+            self.app.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps)
+        except AttributeError:
+            try:
+                # Intentar con el nombre de PyQt5 por compatibilidad
+                self.app.setAttribute(Qt.AA_UseHighDpiPixmaps)
+            except AttributeError:
+                logger.warning("No se pudo configurar atributo AA_UseHighDpiPixmaps")
+                # Continuar sin este atributo
         
         logger.info("✓ Aplicación PyQt6 configurada")
     

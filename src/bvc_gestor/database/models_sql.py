@@ -1,11 +1,11 @@
-# src/bvc_gestor/database/models_sql.py
+# src/bvc_gestor/database/models_sql.py - VERSIÓN CORREGIDA
 """
 Modelos SQLAlchemy para la base de datos
 """
 from sqlalchemy import (
     Column, Integer, String, Float, Boolean, DateTime,
-    Text, ForeignKey, Enum, Numeric, Date, DECIMAL,
-    JSON, CheckConstraint, Index
+    Text, ForeignKey, Enum as SQLAlchemyEnum, Numeric, Date, DECIMAL,
+    JSON, CheckConstraint, Index, UniqueConstraint
 )
 from sqlalchemy.orm import relationship, validates
 from sqlalchemy.sql import func, text
@@ -32,8 +32,8 @@ class ClienteDB(Base):
     
     # Identificación
     id = Column(String(20), primary_key=True)  # Cédula o RIF
-    tipo_persona = Column(Enum(TipoPersona), nullable=False)
-    tipo_documento = Column(Enum(TipoDocumento), nullable=False)
+    tipo_persona = Column(SQLAlchemyEnum(TipoPersona), nullable=False)
+    tipo_documento = Column(SQLAlchemyEnum(TipoDocumento), nullable=False)
     
     # Información personal
     nombre_completo = Column(String(200), nullable=False)
@@ -53,7 +53,7 @@ class ClienteDB(Base):
     codigo_postal = Column(String(10), nullable=True)
     
     # Información financiera
-    perfil_riesgo = Column(Enum(PerfilRiesgo), default=PerfilRiesgo.MODERADO)
+    perfil_riesgo = Column(SQLAlchemyEnum(PerfilRiesgo), default=PerfilRiesgo.MODERADO)
     limite_inversion_bs = Column(DECIMAL(15, 2), default=0.00)
     limite_inversion_usd = Column(DECIMAL(15, 2), default=0.00)
     ingresos_mensuales_bs = Column(DECIMAL(15, 2), nullable=True)
@@ -131,14 +131,14 @@ class ClienteDB(Base):
         """Convertir a diccionario"""
         return {
             'id': self.id,
-            'tipo_persona': self.tipo_persona,
-            'tipo_documento': self.tipo_documento,
+            'tipo_persona': self.tipo_persona.value,
+            'tipo_documento': self.tipo_documento.value,
             'nombre_completo': self.nombre_completo,
             'fecha_nacimiento': self.fecha_nacimiento.isoformat() if self.fecha_nacimiento else None,
             'edad': self.edad,
             'telefono_principal': self.telefono_principal,
             'email': self.email,
-            'perfil_riesgo': self.perfil_riesgo,
+            'perfil_riesgo': self.perfil_riesgo.value,
             'limite_inversion_bs': float(self.limite_inversion_bs) if self.limite_inversion_bs else 0.0,
             'limite_inversion_usd': float(self.limite_inversion_usd) if self.limite_inversion_usd else 0.0,
             'fecha_registro': self.fecha_registro.isoformat(),
@@ -156,7 +156,7 @@ class CuentaDB(Base):
     cliente_id = Column(String(20), ForeignKey('clientes.id', ondelete='CASCADE'), nullable=False)
     numero_cuenta = Column(String(50), unique=True, nullable=False)
     tipo_cuenta = Column(String(30), nullable=False)  # Individual, Conjunta, Corporativa
-    moneda_base = Column(String(3), default=Moneda.USD)
+    moneda_base = Column(String(3), default=Moneda.DOLAR.value)
     
     # Saldos
     saldo_disponible_bs = Column(DECIMAL(15, 2), default=0.00)
@@ -225,7 +225,7 @@ class ActivoDB(Base):
     subsector = Column(String(50), nullable=True)
     
     # Información bursátil
-    moneda = Column(String(3), default=Moneda.USD)
+    moneda = Column(String(3), default=Moneda.DOLAR.value)
     precio_actual = Column(DECIMAL(15, 4), default=0.0000)
     precio_anterior = Column(DECIMAL(15, 4), default=0.0000)
     variacion_diaria = Column(DECIMAL(10, 4), default=0.0000)
@@ -279,8 +279,8 @@ class OrdenDB(Base):
     activo_id = Column(String(20), ForeignKey('activos.id'), nullable=False)
     
     # Tipo de orden
-    tipo_orden = Column(Enum(TipoOrden), nullable=False)
-    tipo_operacion = Column(Enum(TipoOperacion), nullable=False)
+    tipo_orden = Column(SQLAlchemyEnum(TipoOrden), nullable=False)
+    tipo_operacion = Column(SQLAlchemyEnum(TipoOperacion), nullable=False)
     
     # Detalles
     cantidad = Column(Integer, nullable=False)
@@ -288,7 +288,7 @@ class OrdenDB(Base):
     precio_limite = Column(DECIMAL(15, 4), nullable=True)
     
     # Estado
-    estado = Column(Enum(EstadoOrden), default=EstadoOrden.PENDIENTE)
+    estado = Column(SQLAlchemyEnum(EstadoOrden), default=EstadoOrden.PENDIENTE)
     fecha_creacion = Column(DateTime, default=func.now())
     fecha_ejecucion = Column(DateTime, nullable=True)
     fecha_vencimiento = Column(DateTime, nullable=True)
@@ -349,11 +349,11 @@ class OrdenDB(Base):
             'numero_orden': self.numero_orden,
             'cliente_id': self.cliente_id,
             'activo_id': self.activo_id,
-            'tipo_orden': self.tipo_orden,
-            'tipo_operacion': self.tipo_operacion,
+            'tipo_orden': self.tipo_orden.value,
+            'tipo_operacion': self.tipo_operacion.value,
             'cantidad': self.cantidad,
             'precio': float(self.precio) if self.precio else None,
-            'estado': self.estado,
+            'estado': self.estado.value,
             'fecha_creacion': self.fecha_creacion.isoformat(),
             'cantidad_ejecutada': self.cantidad_ejecutada,
             'porcentaje_ejecutado': float(self.porcentaje_ejecutado),
@@ -447,7 +447,7 @@ class PortafolioItemDB(Base):
     
     # Metadatos
     fecha_ultima_actualizacion = Column(DateTime, default=func.now())
-    moneda = Column(String(3), default=Moneda.USD)
+    moneda = Column(String(3), default=Moneda.DOLAR.value)
     
     # Relaciones
     cliente = relationship("ClienteDB")

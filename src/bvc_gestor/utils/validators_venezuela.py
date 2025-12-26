@@ -5,6 +5,7 @@ Validadores específicos para datos venezolanos
 import re
 from datetime import datetime
 from typing import Optional, Tuple
+from .constants import TipoPersona, TipoDocumento
 
 def validar_cedula(cedula: str) -> bool:
     """
@@ -156,10 +157,24 @@ def extraer_tipo_identificacion(identificacion: str) -> Optional[str]:
     identificacion = identificacion.upper()
     
     if identificacion.startswith('V') or identificacion.startswith('E'):
-        return 'Cédula'
+        return TipoDocumento.CEDULA.value
     elif identificacion.startswith('J') or identificacion.startswith('G'):
-        return 'RIF'
+        return TipoDocumento.RIF.value
     elif identificacion.startswith('P'):
-        return 'Pasaporte'
+        return TipoDocumento.PASAPORTE.value
     
     return None
+
+def get_tipo_persona_from_id(identificacion: str) -> TipoPersona:
+    """
+    Determinar tipo de persona basado en la identificación
+    """
+    if not identificacion:
+        return TipoPersona.NATURAL
+    
+    identificacion = identificacion.upper()
+    
+    if identificacion.startswith('J') or identificacion.startswith('G'):
+        return TipoPersona.JURIDICA
+    else:
+        return TipoPersona.NATURAL

@@ -8,7 +8,7 @@ from datetime import datetime
 import json
 from pathlib import Path
 
-from ..utils.constants import DATA_DIR, CONFIG_DIR
+from ..utils.constants import DATA_DIR, CONFIG_DIR, REPORTS_DIR  # Añadir REPORTS_DIR
 from ..utils.logger import logger
 
 @dataclass
@@ -51,7 +51,7 @@ class AppState:
                     self.configuracion = json.load(f)
                     logger.info(f"Configuración cargada desde {self.ruta_configuracion}")
             else:
-                # Configuración por defecto
+                # Configuración por defecto - CORREGIDO: usar str() para Path objects
                 self.configuracion = {
                     'general': {
                         'nombre_aplicacion': 'BVC-GESTOR',
@@ -75,7 +75,7 @@ class AppState:
                     },
                     'reportes': {
                         'formato_predeterminado': 'PDF',
-                        'ruta_guardado': str(REPORTS_DIR),
+                        'ruta_guardado': str(REPORTS_DIR),  # Convertir Path a string
                         'incluir_logo': True,
                         'firma_digital': False
                     }
