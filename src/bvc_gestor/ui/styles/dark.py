@@ -5,26 +5,30 @@ Estilo oscuro para la aplicación
 DARK_STYLESHEET = """
 /* Estilos principales */
 QMainWindow {
-    background-color: #1a1d21;
+    background-color: qlineargradient(spread:pad, x1:1, y1:1, x2:0, y2:0, stop:0.00462963 rgba(6, 13, 46, 255), stop:1 rgba(31, 33, 39, 255));
 }
 
 /* Botones generales */
 QPushButton {
-    background-color: #2c5aa0;
+    background-color: #153c6e;
     color: white;
     border: none;
     border-radius: 6px;
     padding: 8px 16px;
     font-weight: 500;
-    font-size: 14px;
+    font-size: 16px;
 }
 
 QPushButton:hover {
-    background-color: #1e4a8a;
+    background-color: #1A4A89
 }
 
 QPushButton:pressed {
-    background-color: #153c6e;
+    background-color: #0B203C;
+}
+
+QPushButton:checked {
+    background-color: #0B203C;
 }
 
 QPushButton:disabled {

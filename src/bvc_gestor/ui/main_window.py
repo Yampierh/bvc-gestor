@@ -35,7 +35,7 @@ class MainWindow(QMainWindow):
     def setup_ui(self):
         """Configurar interfaz de usuario"""
         # Configurar ventana principal
-        self.setWindowTitle("BVC-GESTOR - Gestor de Bolsa de Valores de Caracas")
+        self.setWindowTitle("BVC-GESTOR")
         
         # Widget central
         central_widget = QWidget()

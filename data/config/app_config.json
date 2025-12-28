@@ -1,10 +1,10 @@
 {
   "general": {
     "nombre_aplicacion": "BVC-GESTOR",
-    "version": "1.0.0",
+    "version": "1.0",
     "modo_oscuro": true,
     "idioma": "es",
-    "moneda_principal": "USD"
+    "moneda_principal": "Bs"
   },
   "comisiones": {
     "comision_base": 0.005,
@@ -21,7 +21,7 @@
   },
   "reportes": {
     "formato_predeterminado": "PDF",
-    "ruta_guardado": "c:\\Users\\yampi\\Documents\\Proyectos\\BVC-GESTOR\\src\\data\\reports",
+    "ruta_guardado": "C:\\Users\\yampi\\Documents\\Proyectos\\BVC-GESTOR\\data\\reports",
     "incluir_logo": true,
     "firma_digital": false
   }

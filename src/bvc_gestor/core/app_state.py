@@ -51,7 +51,7 @@ class AppState:
                     self.configuracion = json.load(f)
                     logger.info(f"Configuración cargada desde {self.ruta_configuracion}")
             else:
-                # Configuración por defecto - CORREGIDO: usar str() para Path objects
+                # Configuración por defecto
                 self.configuracion = {
                     'general': {
                         'nombre_aplicacion': 'BVC-GESTOR',

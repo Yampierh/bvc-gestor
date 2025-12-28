@@ -59,7 +59,7 @@ class BVCGestorApp:
         logger.info("✓ Estado de aplicación inicializado")
     
     def setup_application(self):
-        """Configurar aplicación PyQt6 - CORREGIDO PARA PyQt6"""
+        """Configurar aplicación PyQt6"""
         logger.info("Configurando aplicación PyQt6...")
         
         # Crear aplicación
@@ -71,7 +71,7 @@ class BVCGestorApp:
         # Configurar estilo
         self.app.setStyle('Fusion')
         
-        # Configurar fuente - Versión simplificada para PyQt6
+        # Configurar fuente
         try:
             # Configurar fuente directamente sin QFontDatabase
             app_font = QFont("Arial", 10)
@@ -82,10 +82,9 @@ class BVCGestorApp:
             logger.warning(f"No se pudo configurar fuente: {e}")
             # Usar fuente por defecto
         
-        # Configurar atributos de la aplicación - CORREGIDO para PyQt6
+        # Configurar atributos de la aplicación
         try:
             # En PyQt6, el atributo se llama diferente
-            # PyQt5: Qt.AA_UseHighDpiPixmaps
             # PyQt6: Qt.ApplicationAttribute.AA_UseHighDpiPixmaps
             # Pero verifiquemos qué atributos existen realmente
             self.app.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps)

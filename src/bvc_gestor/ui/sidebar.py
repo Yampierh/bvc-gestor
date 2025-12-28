@@ -39,12 +39,13 @@ class SidebarButton(QPushButton):
         # Estilo básico
         self.setStyleSheet("""
             QPushButton {
+                background-color: #2c5aa0;
                 border: none;
                 border-radius: 8px;
                 padding: 10px 15px;
                 text-align: left;
-                font-weight: 500;
-                font-size: 14px;
+                font-weight: 600;
+                font-size: 16px;
             }
             QPushButton:hover {
                 background-color: #e0e0e0;
@@ -64,28 +65,29 @@ class SidebarButton(QPushButton):
         if active:
             self.setStyleSheet("""
                 QPushButton {
-                    background-color: #2c5aa0;
+                    background-color: #0B203C;
+                    border: none;
+                    border-radius: 8px;
+                    padding: 10px 15px;
+                    text-align: left;
+                    font-weight: 600;
+                    font-size: 16px;
+                }
+            """)
+        else:
+            self.setStyleSheet("""
+                QPushButton {
+                    background-color: #153c6e;
                     color: white;
                     border: none;
                     border-radius: 8px;
                     padding: 10px 15px;
                     text-align: left;
                     font-weight: 600;
-                    font-size: 14px;
-                }
-            """)
-        else:
-            self.setStyleSheet("""
-                QPushButton {
-                    border: none;
-                    border-radius: 8px;
-                    padding: 10px 15px;
-                    text-align: left;
-                    font-weight: 500;
-                    font-size: 14px;
+                    font-size: 16px;
                 }
                 QPushButton:hover {
-                    background-color: #e0e0e0;
+                    background-color: #1A4A89;
                 }
             """)
 
@@ -121,20 +123,6 @@ class Sidebar(QWidget):
         layout.setSpacing(10)
         self.setLayout(layout)
         
-        # Logo/título
-        title_label = QLabel("BVC-GESTOR")
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title_label.setStyleSheet("""
-            QLabel {
-                font-size: 18px;
-                font-weight: bold;
-                color: #2c5aa0;
-                padding: 10px;
-                margin-bottom: 20px;
-            }
-        """)
-        layout.addWidget(title_label)
-        
         # Separador
         separator = QWidget()
         separator.setFixedHeight(1)
@@ -160,18 +148,6 @@ class Sidebar(QWidget):
         
         # Espaciador para empujar contenido hacia arriba
         layout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding))
-        
-        # Versión
-        version_label = QLabel("v1.0.0")
-        version_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        version_label.setStyleSheet("""
-            QLabel {
-                color: #6c757d;
-                font-size: 12px;
-                padding: 5px;
-            }
-        """)
-        layout.addWidget(version_label)
     
     def set_active_button(self, button_id: str):
         """Establecer botón activo"""

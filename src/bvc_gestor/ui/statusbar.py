@@ -27,7 +27,7 @@ class StatusBar(QStatusBar):
         # Estilo básico
         self.setStyleSheet("""
             QStatusBar {
-                background-color: #f8f9fa;
+                background-color: transparent;
                 border-top: 1px solid #dee2e6;
                 font-size: 12px;
                 color: #6c757d;
@@ -65,7 +65,7 @@ class StatusBar(QStatusBar):
         layout.addStretch(1)
         
         # Versión
-        self.version_label = QLabel("v1.0.0")
+        self.version_label = QLabel("v1.0")
         layout.addWidget(self.version_label)
         
         # Agregar widget a la barra de estado

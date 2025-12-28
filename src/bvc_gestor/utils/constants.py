@@ -4,10 +4,10 @@ Constantes globales de la aplicación para Venezuela
 """
 import os
 from pathlib import Path
-from enum import Enum  # Añadir import
+from enum import Enum
 
 # Obtener el directorio base del proyecto (BVC-GESTOR/)
-BASE_DIR = Path(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+BASE_DIR = Path(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 # Debería ser: BVC-GESTOR/
 
 # Rutas de datos (relativas a BASE_DIR)
@@ -36,16 +36,16 @@ class Moneda(str, Enum):
     BOLIVAR = "Bs"
     DOLAR = "USD"
     EURO = "EUR"
-    
+
 class TipoPersona(str, Enum):
     NATURAL = "Natural"
     JURIDICA = "Jurídica"
-    
+
 class TipoDocumento(str, Enum):
     CEDULA = "Cédula"
     RIF = "RIF"
     PASAPORTE = "Pasaporte"
-    
+
 class PerfilRiesgo(str, Enum):
     CONSERVADOR = "Conservador"
     MODERADO = "Moderado"
@@ -75,7 +75,7 @@ HORA_APERTURA = "9:30"
 HORA_CIERRE = "14:00"
 
 # Valores por defecto
-DEFAULT_MONEDA = Moneda.DOLAR
+DEFAULT_MONEDA = Moneda.BOLIVAR
 DEFAULT_PERFIL_RIESGO = PerfilRiesgo.MODERADO
 DEFAULT_TIPO_PERSONA = TipoPersona.NATURAL
 DEFAULT_TIPO_DOCUMENTO = TipoDocumento.CEDULA

@@ -81,9 +81,10 @@ class Topbar(QWidget):
         self.title_label = QLabel("BVC-GESTOR")
         self.title_label.setStyleSheet("""
             QLabel {
+                background-color: transparent;
                 font-size: 20px;
                 font-weight: bold;
-                color: #2c5aa0;
+                color: #white;
             }
         """)
         layout.addWidget(self.title_label)
@@ -95,8 +96,9 @@ class Topbar(QWidget):
         self.datetime_label = QLabel()
         self.datetime_label.setStyleSheet("""
             QLabel {
+                background-color: transparent;
                 color: #6c757d;
-                font-size: 14px;
+                font-size: 16px;
             }
         """)
         layout.addWidget(self.datetime_label)
@@ -104,12 +106,12 @@ class Topbar(QWidget):
         # Botón de refrescar
         self.refresh_btn = QPushButton("🔄")
         self.refresh_btn.setToolTip("Refrescar datos")
-        self.refresh_btn.setFixedSize(40, 40)
+        self.refresh_btn.setFixedSize(45, 45)
         self.refresh_btn.setStyleSheet("""
             QPushButton {
                 border: 1px solid #dee2e6;
                 border-radius: 8px;
-                background-color: #f8f9fa;
+                background-color: transparent;
                 font-size: 16px;
             }
             QPushButton:hover {
@@ -124,12 +126,12 @@ class Topbar(QWidget):
         # Botón de tema
         self.theme_btn = QPushButton("🌙")
         self.theme_btn.setToolTip("Cambiar tema")
-        self.theme_btn.setFixedSize(40, 40)
+        self.theme_btn.setFixedSize(45, 45)
         self.theme_btn.setStyleSheet("""
             QPushButton {
                 border: 1px solid #dee2e6;
                 border-radius: 8px;
-                background-color: #f8f9fa;
+                background-color: transparent;
                 font-size: 16px;
             }
             QPushButton:hover {
@@ -144,12 +146,12 @@ class Topbar(QWidget):
         # Botón de notificaciones
         self.notifications_btn = QPushButton("🔔")
         self.notifications_btn.setToolTip("Notificaciones")
-        self.notifications_btn.setFixedSize(40, 40)
+        self.notifications_btn.setFixedSize(45, 45)
         self.notifications_btn.setStyleSheet("""
             QPushButton {
                 border: 1px solid #dee2e6;
                 border-radius: 8px;
-                background-color: #f8f9fa;
+                background-color: transparent;
                 font-size: 16px;
             }
             QPushButton:hover {
@@ -169,12 +171,12 @@ class Topbar(QWidget):
         # Botón de configuración
         self.settings_btn = QPushButton("⚙️")
         self.settings_btn.setToolTip("Configuración")
-        self.settings_btn.setFixedSize(40, 40)
+        self.settings_btn.setFixedSize(45, 45)
         self.settings_btn.setStyleSheet("""
             QPushButton {
                 border: 1px solid #dee2e6;
                 border-radius: 8px;
-                background-color: #f8f9fa;
+                background-color: transparent;
                 font-size: 16px;
             }
             QPushButton:hover {
@@ -189,12 +191,12 @@ class Topbar(QWidget):
         # Perfil de usuario
         self.profile_btn = QPushButton("👤")
         self.profile_btn.setToolTip("Perfil de usuario")
-        self.profile_btn.setFixedSize(40, 40)
+        self.profile_btn.setFixedSize(45, 45)
         self.profile_btn.setStyleSheet("""
             QPushButton {
                 border: 1px solid #dee2e6;
                 border-radius: 8px;
-                background-color: #f8f9fa;
+                background-color: transparent;
                 font-size: 16px;
             }
             QPushButton:hover {

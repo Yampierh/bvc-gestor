@@ -10,21 +10,23 @@ QMainWindow {
 
 /* Botones generales */
 QPushButton {
-    background-color: #2c5aa0;
-    color: white;
+    background-color: #153c6e;
+    color: black;
     border: none;
     border-radius: 6px;
     padding: 8px 16px;
     font-weight: 500;
-    font-size: 14px;
+    font-size: 16px;
 }
 
 QPushButton:hover {
     background-color: #1e4a8a;
+    color: white;
 }
 
-QPushButton:pressed {
-    background-color: #153c6e;
+QPushButton:checked {
+    background-color: #2c5aa0;
+    color: white;
 }
 
 QPushButton:disabled {
