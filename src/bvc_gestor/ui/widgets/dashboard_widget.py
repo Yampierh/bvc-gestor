@@ -1,6 +1,6 @@
 # src/bvc_gestor/ui/widgets/dashboard_widget.py
 """
-Widget del Dashboard principal
+Widget del Dashboard principal - MIGRADO
 """
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
@@ -15,16 +15,20 @@ from ...core.app_state import AppState
 from ...utils.logger import logger
 from ...database.repositories import RepositoryFactory
 from ...database.engine import get_database
+from ..styles import get_style_manager  # Importar StyleManager
 
 class MetricCard(QFrame):
-    """Tarjeta para métricas del dashboard"""
+    """Tarjeta para métricas del dashboard - MIGRADO"""
     
-    def __init__(self, title: str, value: str, icon: str = "", color: str = "#2c5aa0"):
+    def __init__(self, title: str, value: str, icon: str = "", color: str = "primary"):
         super().__init__()
         self.title = title
         self.value = value
         self.icon = icon
-        self.color = color
+        self.color = color  # Ahora es nombre de color, no valor hex
+        self.style_manager = get_style_manager()  # NUEVO: StyleManager
+        self.setObjectName("metric-card")  # NUEVO: ID para CSS
+        self.setProperty("data-color", color)  # NUEVO: Atributo data
         self.setup_ui()
     
     def setup_ui(self):
@@ -39,51 +43,40 @@ class MetricCard(QFrame):
         
         # Título
         title_label = QLabel(self.title)
-        title_label.setStyleSheet(f"""
-            QLabel {{
-                color: #6c757d;
-                font-size: 14px;
-                font-weight: 500;
-            }}
-        """)
+        title_label.setObjectName("metric-title")  # NUEVO: ID para CSS
         layout.addWidget(title_label)
         
         # Valor
         value_label = QLabel(self.value)
-        value_label.setStyleSheet(f"""
-            QLabel {{
-                color: {self.color};
-                font-size: 24px;
-                font-weight: bold;
-                margin-top: 5px;
-            }}
-        """)
+        value_label.setObjectName("metric-value")  # NUEVO: ID para CSS
+        value_label.setProperty("data-color", self.color)  # NUEVO: Atributo data
         layout.addWidget(value_label)
         
-        # Estilo del frame
-        self.setStyleSheet(f"""
-            QFrame {{
-                background-color: white;
-                border-radius: 8px;
-                border: 1px solid #dee2e6;
-            }}
-            QFrame:hover {{
-                border: 2px solid {self.color};
-            }}
-        """)
+        # ❌ REMOVER setStyleSheet() hardcodeado aquí
+    
+    def apply_styles(self):
+        """Aplicar estilos usando StyleManager"""
+        self.style_manager.apply_stylesheet(self)
+    
+    def on_theme_changed(self):
+        """Manejar cambio de tema"""
+        self.apply_styles()
 
 class DashboardWidget(QWidget):
-    """Widget principal del dashboard"""
+    """Widget principal del dashboard - MIGRADO"""
     
     refresh_requested = pyqtSignal()
     
     def __init__(self, app_state: AppState):
         super().__init__()
         self.app_state = app_state
+        self.style_manager = get_style_manager()  # NUEVO: StyleManager
         self.db_session = None
         self.metric_cards = []
+        self.setObjectName("dashboard-widget")  # NUEVO: ID para CSS
         self.setup_ui()
         self.setup_connections()
+        self.apply_styles()  # NUEVO: Aplicar estilos
         logger.info("DashboardWidget inicializado")
     
     def setup_ui(self):
@@ -95,28 +88,17 @@ class DashboardWidget(QWidget):
         
         # Título
         title_label = QLabel("📊 Dashboard")
-        title_label.setStyleSheet("""
-            QLabel {
-                font-size: 24px;
-                font-weight: bold;
-                color: #2c5aa0;
-                margin-bottom: 10px;
-            }
-        """)
+        title_label.setObjectName("dashboard-title")  # NUEVO: ID para CSS
         layout.addWidget(title_label)
         
         # Área desplazable
         scroll_area = QScrollArea()
+        scroll_area.setObjectName("dashboard-scroll")  # NUEVO: ID para CSS
         scroll_area.setWidgetResizable(True)
         scroll_area.setFrameShape(QFrame.Shape.NoFrame)
-        scroll_area.setStyleSheet("""
-            QScrollArea {
-                border: none;
-                background-color: transparent;
-            }
-        """)
         
         scroll_widget = QWidget()
+        scroll_widget.setObjectName("dashboard-content")  # NUEVO: ID para CSS
         scroll_layout = QVBoxLayout()
         scroll_layout.setContentsMargins(0, 0, 0, 0)
         scroll_layout.setSpacing(20)
@@ -143,27 +125,13 @@ class DashboardWidget(QWidget):
         """Configurar sección de actividad reciente"""
         # Título de sección
         activity_title = QLabel("⚡ Actividad Reciente")
-        activity_title.setStyleSheet("""
-            QLabel {
-                font-size: 18px;
-                font-weight: bold;
-                color: #495057;
-                margin-top: 20px;
-            }
-        """)
+        activity_title.setObjectName("activity-title")  # NUEVO: ID para CSS
         layout.addWidget(activity_title)
         
         # Frame para actividad
         self.activity_frame = QFrame()
+        self.activity_frame.setObjectName("activity-frame")  # NUEVO: ID para CSS
         self.activity_frame.setFrameStyle(QFrame.Shape.StyledPanel | QFrame.Shadow.Raised)
-        self.activity_frame.setStyleSheet("""
-            QFrame {
-                background-color: white;
-                border-radius: 8px;
-                border: 1px solid #dee2e6;
-                padding: 15px;
-            }
-        """)
         
         self.activity_layout = QVBoxLayout()
         self.activity_layout.setSpacing(10)
@@ -171,10 +139,18 @@ class DashboardWidget(QWidget):
         
         # Mensaje de carga inicial
         loading_label = QLabel("Cargando actividad...")
-        loading_label.setStyleSheet("color: #6c757d;")
+        loading_label.setObjectName("activity-loading")  # NUEVO: ID para CSS
         self.activity_layout.addWidget(loading_label)
         
         layout.addWidget(self.activity_frame)
+    
+    def apply_styles(self):
+        """Aplicar estilos usando StyleManager"""
+        self.style_manager.apply_stylesheet(self)
+        # Aplicar estilos a todas las tarjetas de métricas
+        for card in self.metric_cards:
+            if hasattr(card, 'apply_styles'):
+                card.apply_styles()
     
     def setup_connections(self):
         """Configurar conexiones"""
@@ -205,18 +181,19 @@ class DashboardWidget(QWidget):
             ordenes_pendientes = len(orden_repo.get_pending_orders())
             ordenes_hoy = len(orden_repo.get_today_orders())
             
-            # Métricas de ejemplo (serían calculadas de datos reales)
+            # Métricas de ejemplo
             capital_total = 1500000.00  # $1.5M
             rendimiento_mensual = 2.4   # 2.4%
             
-            # Definir métricas
+            # Definir métricas (ahora con nombres de color)
             metrics = [
-                ("👥 Clientes Activos", f"{clientes_activos}/{total_clientes}", "#2c5aa0"),
-                ("💼 Cuentas Activas", f"{cuentas_activas}/{total_cuentas}", "#28a745"),
-                ("📋 Órdenes Pendientes", str(ordenes_pendientes), "#ffc107"),
-                ("📈 Capital Total", f"${capital_total:,.2f}", "#17a2b8"),
-                ("📊 Rendimiento Mensual", f"{rendimiento_mensual}%", rendimiento_mensual >= 0 and "#198754" or "#dc3545"),
-                ("🔄 Órdenes Hoy", str(ordenes_hoy), "#6f42c1"),
+                ("👥 Clientes Activos", f"{clientes_activos}/{total_clientes}", "primary"),
+                ("💼 Cuentas Activas", f"{cuentas_activas}/{total_cuentas}", "success"),
+                ("📋 Órdenes Pendientes", str(ordenes_pendientes), "warning"),
+                ("📈 Capital Total", f"${capital_total:,.2f}", "info"),
+                ("📊 Rendimiento Mensual", f"{rendimiento_mensual}%", 
+                "profit" if rendimiento_mensual >= 0 else "loss"),
+                ("🔄 Órdenes Hoy", str(ordenes_hoy), "secondary"),
             ]
             
             # Actualizar tarjetas de métricas
@@ -250,6 +227,9 @@ class DashboardWidget(QWidget):
             card = MetricCard(title, value, color=color)
             self.metrics_grid.addWidget(card, row, col)
             self.metric_cards.append(card)
+        
+        # Aplicar estilos a las nuevas tarjetas
+        self.apply_styles()
     
     def update_recent_activity(self):
         """Actualizar actividad reciente"""
@@ -271,32 +251,30 @@ class DashboardWidget(QWidget):
         
         for activity in activities[:5]:  # Mostrar solo las 5 más recientes
             activity_label = QLabel(f"• {activity}")
-            activity_label.setStyleSheet("""
-                QLabel {
-                    color: #495057;
-                    font-size: 14px;
-                    padding: 5px 0;
-                }
-            """)
+            activity_label.setObjectName("activity-item")  # NUEVO: ID para CSS
             self.activity_layout.addWidget(activity_label)
         
         # Si no hay actividad
         if not activities:
             no_activity = QLabel("No hay actividad reciente")
-            no_activity.setStyleSheet("color: #6c757d; font-style: italic;")
+            no_activity.setObjectName("activity-empty")  # NUEVO: ID para CSS
             self.activity_layout.addWidget(no_activity)
     
     def show_placeholder_metrics(self):
         """Mostrar métricas de placeholder en caso de error"""
         metrics = [
-            ("👥 Clientes", "Cargando...", "#2c5aa0"),
-            ("💼 Cuentas", "Cargando...", "#28a745"),
-            ("📋 Órdenes", "Cargando...", "#ffc107"),
-            ("📈 Capital", "Cargando...", "#17a2b8"),
-            ("📊 Rendimiento", "Cargando...", "#198754"),
-            ("🔄 Actividad", "Cargando...", "#6f42c1"),
+            ("👥 Clientes", "Cargando...", "primary"),
+            ("💼 Cuentas", "Cargando...", "success"),
+            ("📋 Órdenes", "Cargando...", "warning"),
+            ("📈 Capital", "Cargando...", "info"),
+            ("📊 Rendimiento", "Cargando...", "secondary"),
+            ("🔄 Actividad", "Cargando...", "secondary"),
         ]
         self.update_metric_cards(metrics)
+    
+    def on_theme_changed(self, dark_mode: bool):
+        """Manejar cambio de tema"""
+        self.apply_styles()
     
     def cleanup(self):
         """Limpiar recursos"""

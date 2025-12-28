@@ -1,6 +1,6 @@
 # src/bvc_gestor/ui/topbar.py
 """
-Barra superior con controles de usuario
+Barra superior con controles de usuario - MIGRADO
 """
 from PyQt6.QtWidgets import (
     QWidget, QHBoxLayout, QPushButton, QLabel, QFrame
@@ -11,28 +11,22 @@ import logging
 
 from ..core.app_state import AppState
 from ..utils.logger import logger
+from .styles import get_style_manager  # Importar StyleManager
 
 class NotificationBadge(QLabel):
-    """Badge para notificaciones"""
+    """Badge para notificaciones - MIGRADO"""
     
     def __init__(self, parent=None):
         super().__init__(parent)
         self.count = 0
+        self.setObjectName("notification-badge")  # NUEVO: ID para CSS
         self.setup_ui()
     
     def setup_ui(self):
         """Configurar interfaz"""
         self.setFixedSize(20, 20)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.setStyleSheet("""
-            QLabel {
-                background-color: #dc3545;
-                color: white;
-                border-radius: 10px;
-                font-size: 10px;
-                font-weight: bold;
-            }
-        """)
+        # ❌ REMOVER setStyleSheet() hardcodeado
         self.hide()
     
     def set_count(self, count: int):
@@ -45,7 +39,7 @@ class NotificationBadge(QLabel):
             self.hide()
 
 class Topbar(QWidget):
-    """Barra superior con controles"""
+    """Barra superior con controles - MIGRADO"""
     
     # Señales
     theme_toggled = pyqtSignal()
@@ -57,19 +51,17 @@ class Topbar(QWidget):
     def __init__(self, app_state: AppState):
         super().__init__()
         self.app_state = app_state
+        self.style_manager = get_style_manager()  # NUEVO: StyleManager
+        self.setObjectName("topbar")  # NUEVO: ID para CSS
         self.setup_ui()
         self.setup_connections()
         self.start_timers()
+        self.apply_styles()  # NUEVO: Aplicar estilos
     
     def setup_ui(self):
         """Configurar interfaz de usuario"""
         self.setFixedHeight(60)
-        self.setStyleSheet("""
-            QWidget {
-                background-color: white;
-                border-bottom: 1px solid #dee2e6;
-            }
-        """)
+        # ❌ REMOVER setStyleSheet() hardcodeado aquí
         
         # Layout principal
         layout = QHBoxLayout()
@@ -79,14 +71,7 @@ class Topbar(QWidget):
         
         # Título de la aplicación
         self.title_label = QLabel("BVC-GESTOR")
-        self.title_label.setStyleSheet("""
-            QLabel {
-                background-color: transparent;
-                font-size: 20px;
-                font-weight: bold;
-                color: #white;
-            }
-        """)
+        self.title_label.setObjectName("topbar-title")  # NUEVO: ID para CSS
         layout.addWidget(self.title_label)
         
         # Espaciador
@@ -94,73 +79,28 @@ class Topbar(QWidget):
         
         # Fecha y hora
         self.datetime_label = QLabel()
-        self.datetime_label.setStyleSheet("""
-            QLabel {
-                background-color: transparent;
-                color: #6c757d;
-                font-size: 16px;
-            }
-        """)
+        self.datetime_label.setObjectName("topbar-datetime")  # NUEVO: ID para CSS
         layout.addWidget(self.datetime_label)
         
         # Botón de refrescar
         self.refresh_btn = QPushButton("🔄")
         self.refresh_btn.setToolTip("Refrescar datos")
-        self.refresh_btn.setFixedSize(45, 45)
-        self.refresh_btn.setStyleSheet("""
-            QPushButton {
-                border: 1px solid #dee2e6;
-                border-radius: 8px;
-                background-color: transparent;
-                font-size: 16px;
-            }
-            QPushButton:hover {
-                background-color: #e9ecef;
-            }
-            QPushButton:pressed {
-                background-color: #dee2e6;
-            }
-        """)
+        self.refresh_btn.setFixedSize(40, 40)
+        self.refresh_btn.setProperty("class", "icon-button topbar-button")  # NUEVO: Clases CSS
         layout.addWidget(self.refresh_btn)
         
         # Botón de tema
         self.theme_btn = QPushButton("🌙")
         self.theme_btn.setToolTip("Cambiar tema")
-        self.theme_btn.setFixedSize(45, 45)
-        self.theme_btn.setStyleSheet("""
-            QPushButton {
-                border: 1px solid #dee2e6;
-                border-radius: 8px;
-                background-color: transparent;
-                font-size: 16px;
-            }
-            QPushButton:hover {
-                background-color: #e9ecef;
-            }
-            QPushButton:pressed {
-                background-color: #dee2e6;
-            }
-        """)
+        self.theme_btn.setFixedSize(40, 40)
+        self.theme_btn.setProperty("class", "icon-button topbar-button")  # NUEVO: Clases CSS
         layout.addWidget(self.theme_btn)
         
         # Botón de notificaciones
         self.notifications_btn = QPushButton("🔔")
         self.notifications_btn.setToolTip("Notificaciones")
-        self.notifications_btn.setFixedSize(45, 45)
-        self.notifications_btn.setStyleSheet("""
-            QPushButton {
-                border: 1px solid #dee2e6;
-                border-radius: 8px;
-                background-color: transparent;
-                font-size: 16px;
-            }
-            QPushButton:hover {
-                background-color: #e9ecef;
-            }
-            QPushButton:pressed {
-                background-color: #dee2e6;
-            }
-        """)
+        self.notifications_btn.setFixedSize(40, 40)
+        self.notifications_btn.setProperty("class", "icon-button topbar-button")  # NUEVO: Clases CSS
         layout.addWidget(self.notifications_btn)
         
         # Badge de notificaciones
@@ -171,41 +111,15 @@ class Topbar(QWidget):
         # Botón de configuración
         self.settings_btn = QPushButton("⚙️")
         self.settings_btn.setToolTip("Configuración")
-        self.settings_btn.setFixedSize(45, 45)
-        self.settings_btn.setStyleSheet("""
-            QPushButton {
-                border: 1px solid #dee2e6;
-                border-radius: 8px;
-                background-color: transparent;
-                font-size: 16px;
-            }
-            QPushButton:hover {
-                background-color: #e9ecef;
-            }
-            QPushButton:pressed {
-                background-color: #dee2e6;
-            }
-        """)
+        self.settings_btn.setFixedSize(40, 40)
+        self.settings_btn.setProperty("class", "icon-button topbar-button")  # NUEVO: Clases CSS
         layout.addWidget(self.settings_btn)
         
         # Perfil de usuario
         self.profile_btn = QPushButton("👤")
         self.profile_btn.setToolTip("Perfil de usuario")
-        self.profile_btn.setFixedSize(45, 45)
-        self.profile_btn.setStyleSheet("""
-            QPushButton {
-                border: 1px solid #dee2e6;
-                border-radius: 8px;
-                background-color: transparent;
-                font-size: 16px;
-            }
-            QPushButton:hover {
-                background-color: #e9ecef;
-            }
-            QPushButton:pressed {
-                background-color: #dee2e6;
-            }
-        """)
+        self.profile_btn.setFixedSize(40, 40)
+        self.profile_btn.setProperty("class", "icon-button topbar-button")  # NUEVO: Clases CSS
         layout.addWidget(self.profile_btn)
     
     def setup_connections(self):
@@ -216,6 +130,11 @@ class Topbar(QWidget):
         self.settings_btn.clicked.connect(self.settings_clicked)
         self.profile_btn.clicked.connect(self.profile_clicked)
     
+    def apply_styles(self):
+        """Aplicar estilos usando StyleManager"""
+        self.style_manager.apply_stylesheet(self)
+        self.update_theme_icon()
+    
     def start_timers(self):
         """Iniciar timers para actualizaciones"""
         # Timer para fecha y hora
@@ -223,9 +142,6 @@ class Topbar(QWidget):
         self.datetime_timer.timeout.connect(self.update_datetime)
         self.datetime_timer.start(1000)  # Actualizar cada segundo
         self.update_datetime()
-        
-        # Timer para actualizar tema
-        self.update_theme_icon()
     
     def update_datetime(self):
         """Actualizar fecha y hora"""
@@ -246,3 +162,8 @@ class Topbar(QWidget):
         """Manejador para cambio de tema"""
         self.update_theme_icon()
         self.theme_toggled.emit()
+    
+    def on_theme_changed(self):
+        """Manejar cambio de tema desde MainWindow"""
+        self.update_theme_icon()
+        self.apply_styles()
