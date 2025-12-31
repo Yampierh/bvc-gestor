@@ -1,4 +1,4 @@
-# src/bvc_gestor/main.py - VERSIÓN CORREGIDA PARA PyQt6
+# src/bvc_gestor/main.py
 """
 Punto de entrada principal de la aplicación BVC-GESTOR
 """
@@ -65,7 +65,7 @@ class BVCGestorApp:
         # Crear aplicación
         self.app = QApplication(sys.argv)
         self.app.setApplicationName("BVC-GESTOR")
-        self.app.setApplicationVersion("1.0.0")
+        self.app.setApplicationVersion("1.0")
         self.app.setOrganizationName("BVC-Gestor")
         
         # Configurar estilo
@@ -82,7 +82,7 @@ class BVCGestorApp:
             logger.warning(f"No se pudo configurar fuente: {e}")
             # Usar fuente por defecto
         
-        # Configurar atributos de la aplicación
+        """# Configurar atributos de la aplicación
         try:
             # En PyQt6, el atributo se llama diferente
             # PyQt6: Qt.ApplicationAttribute.AA_UseHighDpiPixmaps
@@ -94,7 +94,7 @@ class BVCGestorApp:
                 self.app.setAttribute(Qt.AA_UseHighDpiPixmaps)
             except AttributeError:
                 logger.warning("No se pudo configurar atributo AA_UseHighDpiPixmaps")
-                # Continuar sin este atributo
+                # Continuar sin este atributo """
         
         logger.info("✓ Aplicación PyQt6 configurada")
     
@@ -103,7 +103,7 @@ class BVCGestorApp:
         logger.info("Creando ventana principal...")
         
         self.main_window = MainWindow(self.app_state)
-        self.main_window.setWindowTitle("BVC-GESTOR - Gestor de Bolsa de Valores de Caracas")
+        self.main_window.setWindowTitle("BVC-GESTOR - Finanzas de Valores")
         self.main_window.resize(1400, 800)
         
         logger.info("✓ Ventana principal creada")

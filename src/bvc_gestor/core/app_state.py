@@ -8,7 +8,7 @@ from datetime import datetime
 import json
 from pathlib import Path
 
-from ..utils.constants import DATA_DIR, CONFIG_DIR, REPORTS_DIR  # Añadir REPORTS_DIR
+from ..utils.constants import DATA_DIR, CONFIG_DIR, REPORTS_DIR
 from ..utils.logger import logger
 
 @dataclass
@@ -55,10 +55,10 @@ class AppState:
                 self.configuracion = {
                     'general': {
                         'nombre_aplicacion': 'BVC-GESTOR',
-                        'version': '1.0.0',
+                        'version': '1.0',
                         'modo_oscuro': False,
                         'idioma': 'es',
-                        'moneda_principal': 'USD'
+                        'moneda_principal': 'Bs'
                     },
                     'comisiones': {
                         'comision_base': 0.005,

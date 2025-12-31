@@ -55,7 +55,7 @@ class MainWindow(QMainWindow):
     def setup_ui(self):
         """Configurar interfaz de usuario"""
         # Configurar ventana principal
-        self.setWindowTitle("BVC-GESTOR - Gestor de Bolsa de Valores de Caracas")
+        self.setWindowTitle("BVC-GESTOR")
         
         # Configurar icono de la ventana (si existe)
         try:
@@ -133,10 +133,18 @@ class MainWindow(QMainWindow):
         self.stacked_widget.addWidget(self.dashboard_widget)
         self.widgets['dashboard'] = self.dashboard_widget
         
+        # Clientes
+        self.clientes_widget = ClientesWidget(self.app_state)
+        self.stacked_widget.addWidget(self.clientes_widget)
+        self.widgets['clientes'] = self.clientes_widget
+        
+        # Órdenes
+        self.ordenes_widget = OrdenesWidget(self.app_state)
+        self.stacked_widget.addWidget(self.ordenes_widget)
+        self.widgets['ordenes'] = self.ordenes_widget
+        
         # Crear placeholders para otros módulos
         module_configs = [
-            ('clientes', '👥 Clientes'),
-            ('ordenes', '💼 Órdenes'),
             ('portafolio', '📈 Portafolio'),
             ('reportes', '📋 Reportes'),
             ('config', '⚙️ Configuración'),
@@ -377,8 +385,8 @@ class MainWindow(QMainWindow):
                 self.topbar.update_theme_icon()
             
             # Actualizar Statusbar
-            if hasattr(self, 'statusbar'):
-                self.statusbar.update_theme_indicator()
+            # if hasattr(self, 'statusbar'):
+            #     self.statusbar.update_theme_indicator()
             
             # Recargar estilos
             self.apply_stylesheet()

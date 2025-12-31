@@ -5,8 +5,8 @@ Barra superior con controles de usuario - MIGRADO
 from PyQt6.QtWidgets import (
     QWidget, QHBoxLayout, QPushButton, QLabel, QFrame
 )
-from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QDateTime
-from PyQt6.QtGui import QFont
+from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QDateTime, QSize
+from PyQt6.QtGui import QFont, QIcon
 import logging
 
 from ..core.app_state import AppState
@@ -61,8 +61,6 @@ class Topbar(QWidget):
     def setup_ui(self):
         """Configurar interfaz de usuario"""
         self.setFixedHeight(60)
-        # ❌ REMOVER setStyleSheet() hardcodeado aquí
-        
         # Layout principal
         layout = QHBoxLayout()
         layout.setContentsMargins(20, 0, 20, 0)
@@ -83,21 +81,30 @@ class Topbar(QWidget):
         layout.addWidget(self.datetime_label)
         
         # Botón de refrescar
-        self.refresh_btn = QPushButton("🔄")
+        i_refresh = QIcon()
+        i_refresh.addFile(u"./src/bvc_gestor/assets/icons/components/topbar/refresh.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.refresh_btn = QPushButton()
+        self.refresh_btn.setIcon(i_refresh)
         self.refresh_btn.setToolTip("Refrescar datos")
         self.refresh_btn.setFixedSize(40, 40)
-        self.refresh_btn.setProperty("class", "icon-button topbar-button")  # NUEVO: Clases CSS
+        self.refresh_btn.setProperty("class", "icon-button topbar-button")  # Clases CSS
         layout.addWidget(self.refresh_btn)
         
         # Botón de tema
-        self.theme_btn = QPushButton("🌙")
+        i_half_moon = QIcon()
+        i_half_moon.addFile(u"./src/bvc_gestor/assets/icons/components/topbar/half-moon.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.theme_btn = QPushButton()
+        self.theme_btn.setIcon(i_half_moon)
         self.theme_btn.setToolTip("Cambiar tema")
         self.theme_btn.setFixedSize(40, 40)
         self.theme_btn.setProperty("class", "icon-button topbar-button")  # NUEVO: Clases CSS
         layout.addWidget(self.theme_btn)
         
         # Botón de notificaciones
-        self.notifications_btn = QPushButton("🔔")
+        i_bell_notification = QIcon()
+        i_bell_notification.addFile(u"./src/bvc_gestor/assets/icons/components/topbar/bell-notification.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.notifications_btn = QPushButton()
+        self.notifications_btn.setIcon(i_bell_notification)
         self.notifications_btn.setToolTip("Notificaciones")
         self.notifications_btn.setFixedSize(40, 40)
         self.notifications_btn.setProperty("class", "icon-button topbar-button")  # NUEVO: Clases CSS
@@ -109,14 +116,20 @@ class Topbar(QWidget):
         self.notification_badge.set_count(3)  # Placeholder
         
         # Botón de configuración
-        self.settings_btn = QPushButton("⚙️")
+        i_settings = QIcon()
+        i_settings.addFile(u"./src/bvc_gestor/assets/icons/components/topbar/settings.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)       
+        self.settings_btn = QPushButton()
+        self.settings_btn.setIcon(i_settings)
         self.settings_btn.setToolTip("Configuración")
         self.settings_btn.setFixedSize(40, 40)
         self.settings_btn.setProperty("class", "icon-button topbar-button")  # NUEVO: Clases CSS
         layout.addWidget(self.settings_btn)
         
         # Perfil de usuario
-        self.profile_btn = QPushButton("👤")
+        i_profile = QIcon()
+        i_profile.addFile(u"./src/bvc_gestor/assets/icons/components/topbar/user.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.profile_btn = QPushButton()
+        self.profile_btn.setIcon(i_profile)
         self.profile_btn.setToolTip("Perfil de usuario")
         self.profile_btn.setFixedSize(40, 40)
         self.profile_btn.setProperty("class", "icon-button topbar-button")  # NUEVO: Clases CSS

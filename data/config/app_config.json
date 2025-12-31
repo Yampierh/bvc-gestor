@@ -2,7 +2,7 @@
   "general": {
     "nombre_aplicacion": "BVC-GESTOR",
     "version": "1.0",
-    "modo_oscuro": true,
+    "modo_oscuro": false,
     "idioma": "es",
     "moneda_principal": "Bs"
   },

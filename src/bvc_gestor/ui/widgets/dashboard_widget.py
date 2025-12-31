@@ -18,7 +18,7 @@ from ...database.engine import get_database
 from ..styles import get_style_manager  # Importar StyleManager
 
 class MetricCard(QFrame):
-    """Tarjeta para métricas del dashboard - MIGRADO"""
+    """Tarjeta para métricas del dashboard"""
     
     def __init__(self, title: str, value: str, icon: str = "", color: str = "primary"):
         super().__init__()
@@ -26,9 +26,9 @@ class MetricCard(QFrame):
         self.value = value
         self.icon = icon
         self.color = color  # Ahora es nombre de color, no valor hex
-        self.style_manager = get_style_manager()  # NUEVO: StyleManager
-        self.setObjectName("metric-card")  # NUEVO: ID para CSS
-        self.setProperty("data-color", color)  # NUEVO: Atributo data
+        self.style_manager = get_style_manager()  # StyleManager
+        self.setObjectName("metric-card")  # ID para CSS
+        self.setProperty("data-color", color)  # Atributo data
         self.setup_ui()
     
     def setup_ui(self):
@@ -43,16 +43,14 @@ class MetricCard(QFrame):
         
         # Título
         title_label = QLabel(self.title)
-        title_label.setObjectName("metric-title")  # NUEVO: ID para CSS
+        title_label.setObjectName("metric-title")  # ID para CSS
         layout.addWidget(title_label)
         
         # Valor
         value_label = QLabel(self.value)
-        value_label.setObjectName("metric-value")  # NUEVO: ID para CSS
-        value_label.setProperty("data-color", self.color)  # NUEVO: Atributo data
+        value_label.setObjectName("metric-value")  # ID para CSS
+        value_label.setProperty("data-color", self.color)  # Atributo data
         layout.addWidget(value_label)
-        
-        # ❌ REMOVER setStyleSheet() hardcodeado aquí
     
     def apply_styles(self):
         """Aplicar estilos usando StyleManager"""
@@ -70,13 +68,13 @@ class DashboardWidget(QWidget):
     def __init__(self, app_state: AppState):
         super().__init__()
         self.app_state = app_state
-        self.style_manager = get_style_manager()  # NUEVO: StyleManager
+        self.style_manager = get_style_manager()  # StyleManager
         self.db_session = None
         self.metric_cards = []
-        self.setObjectName("dashboard-widget")  # NUEVO: ID para CSS
+        self.setObjectName("dashboard-widget")  # ID para CSS
         self.setup_ui()
         self.setup_connections()
-        self.apply_styles()  # NUEVO: Aplicar estilos
+        self.apply_styles()  # Aplicar estilos
         logger.info("DashboardWidget inicializado")
     
     def setup_ui(self):
@@ -88,17 +86,17 @@ class DashboardWidget(QWidget):
         
         # Título
         title_label = QLabel("📊 Dashboard")
-        title_label.setObjectName("dashboard-title")  # NUEVO: ID para CSS
+        title_label.setObjectName("dashboard-title")  # ID para CSS
         layout.addWidget(title_label)
         
         # Área desplazable
         scroll_area = QScrollArea()
-        scroll_area.setObjectName("dashboard-scroll")  # NUEVO: ID para CSS
+        scroll_area.setObjectName("dashboard-scroll")  # ID para CSS
         scroll_area.setWidgetResizable(True)
         scroll_area.setFrameShape(QFrame.Shape.NoFrame)
         
         scroll_widget = QWidget()
-        scroll_widget.setObjectName("dashboard-content")  # NUEVO: ID para CSS
+        scroll_widget.setObjectName("dashboard-content")  # ID para CSS
         scroll_layout = QVBoxLayout()
         scroll_layout.setContentsMargins(0, 0, 0, 0)
         scroll_layout.setSpacing(20)
@@ -125,12 +123,12 @@ class DashboardWidget(QWidget):
         """Configurar sección de actividad reciente"""
         # Título de sección
         activity_title = QLabel("⚡ Actividad Reciente")
-        activity_title.setObjectName("activity-title")  # NUEVO: ID para CSS
+        activity_title.setObjectName("activity-title")  # ID para CSS
         layout.addWidget(activity_title)
         
         # Frame para actividad
         self.activity_frame = QFrame()
-        self.activity_frame.setObjectName("activity-frame")  # NUEVO: ID para CSS
+        self.activity_frame.setObjectName("activity-frame")  # ID para CSS
         self.activity_frame.setFrameStyle(QFrame.Shape.StyledPanel | QFrame.Shadow.Raised)
         
         self.activity_layout = QVBoxLayout()
@@ -139,7 +137,7 @@ class DashboardWidget(QWidget):
         
         # Mensaje de carga inicial
         loading_label = QLabel("Cargando actividad...")
-        loading_label.setObjectName("activity-loading")  # NUEVO: ID para CSS
+        loading_label.setObjectName("activity-loading")  # ID para CSS
         self.activity_layout.addWidget(loading_label)
         
         layout.addWidget(self.activity_frame)
@@ -251,13 +249,13 @@ class DashboardWidget(QWidget):
         
         for activity in activities[:5]:  # Mostrar solo las 5 más recientes
             activity_label = QLabel(f"• {activity}")
-            activity_label.setObjectName("activity-item")  # NUEVO: ID para CSS
+            activity_label.setObjectName("activity-item")  # ID para CSS
             self.activity_layout.addWidget(activity_label)
         
         # Si no hay actividad
         if not activities:
             no_activity = QLabel("No hay actividad reciente")
-            no_activity.setObjectName("activity-empty")  # NUEVO: ID para CSS
+            no_activity.setObjectName("activity-empty")  # ID para CSS
             self.activity_layout.addWidget(no_activity)
     
     def show_placeholder_metrics(self):

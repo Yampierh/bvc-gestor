@@ -13,7 +13,7 @@ from ..database.engine import get_database
 from .styles import get_style_manager  # Importar StyleManager
 
 class StatusBar(QStatusBar):
-    """Barra de estado personalizada - MIGRADO"""
+    """Barra de estado personalizada"""
     
     def __init__(self, app_state: AppState):
         super().__init__()
@@ -28,9 +28,6 @@ class StatusBar(QStatusBar):
     
     def setup_ui(self):
         """Configurar interfaz de usuario"""
-        # ❌ REMOVER setStyleSheet() hardcodeado aquí
-        
-        # Eliminar widget por defecto
         self.clearMessage()
         
         # Widget personalizado
@@ -61,7 +58,7 @@ class StatusBar(QStatusBar):
         layout.addStretch(1)
         
         # Versión
-        self.version_label = QLabel("v1.0.0")
+        self.version_label = QLabel("v1.0")
         self.version_label.setObjectName("status-version")  # NUEVO: ID para CSS
         layout.addWidget(self.version_label)
         

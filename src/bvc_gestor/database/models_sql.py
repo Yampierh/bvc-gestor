@@ -1,4 +1,4 @@
-# src/bvc_gestor/database/models_sql.py - VERSIÓN CORREGIDA
+# src/bvc_gestor/database/models_sql.py
 """
 Modelos SQLAlchemy para la base de datos
 """
@@ -32,16 +32,16 @@ class ClienteDB(Base):
     
     # Identificación
     id = Column(String(20), primary_key=True)  # Cédula o RIF
-    tipo_persona = Column(SQLAlchemyEnum(TipoPersona), nullable=False)
-    tipo_documento = Column(SQLAlchemyEnum(TipoDocumento), nullable=False)
+    tipo_persona = Column(SQLAlchemyEnum(TipoPersona), nullable=False) # Natural o Jurídica
+    tipo_documento = Column(SQLAlchemyEnum(TipoDocumento), nullable=False) # Cédula, RIF, Pasaporte
     
     # Información personal
-    nombre_completo = Column(String(200), nullable=False)
-    fecha_nacimiento = Column(Date, nullable=True)
-    lugar_nacimiento = Column(String(100), nullable=True)
-    nacionalidad = Column(String(50), default="Venezolana")
-    estado_civil = Column(String(50), nullable=True)
-    profesion_ocupacion = Column(String(100), nullable=True)
+    nombre_completo = Column(String(200), nullable=False) # Nombre completo o razón social
+    fecha_nacimiento = Column(Date, nullable=True) # Nullable para personas jurídicas
+    lugar_nacimiento = Column(String(100), nullable=True) # Ciudad y estado
+    nacionalidad = Column(String(50), default="Venezolana") # Nacionalidad del cliente
+    estado_civil = Column(String(50), nullable=True) # Soltero, Casado, etc.
+    profesion_ocupacion = Column(String(100), nullable=True) # Profesión u ocupación
     
     # Información de contacto
     telefono_principal = Column(String(20), nullable=False)
