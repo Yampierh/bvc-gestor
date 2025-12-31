@@ -31,7 +31,7 @@ def create_directories():
 # Crear directorios inmediatamente
 create_directories()
 
-# Enums para Venezuela (usando Enum de Python)
+# Enums para Venezuela
 class Moneda(str, Enum):
     BOLIVAR = "Bs"
     DOLAR = "USD"

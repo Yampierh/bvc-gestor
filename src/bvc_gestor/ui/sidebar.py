@@ -18,7 +18,7 @@ from .styles import get_style_manager
 class SidebarButton(QPushButton):
     """Botón personalizado para la sidebar"""
     
-    clicked_signal = pyqtSignal(str)  # Señal con ID del botón
+    clicked_signal = pyqtSignal(str)
     
     def __init__(self, button_id: str, text: str, parent=None):
         super().__init__(parent)
