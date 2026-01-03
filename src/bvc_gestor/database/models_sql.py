@@ -18,12 +18,9 @@ import re
 import logging
 
 from .engine import Base
-from ..utils.validators_venezuela import (
-    validar_cedula, validar_rif, validar_telefono_venezolano
-)
+from ..utils.validators_venezuela import validar_telefono_venezolano
 from ..utils.constants import (
-    TipoPersona, TipoDocumento, PerfilRiesgo,
-    EstadoOrden, TipoOrden, TipoOperacion, Moneda
+    TipoPersona, EstadoOrden, TipoOrden, TipoOperacion, Moneda
 )
 
 logger = logging.getLogger(__name__)
@@ -69,17 +66,9 @@ class ClienteDB(Base, AuditMixin):
     
     # Identificación
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True) # ID interno
-    documento_id: Mapped[str] = mapped_column(String(20), unique=True, index=True, nullable=False) # Cédula, RIF o Pasaporte
+    rif: Mapped[str] = mapped_column(String(20), unique=True, index=True, nullable=False) # RIF
     tipo_persona: Mapped[TipoPersona] = mapped_column(SQLAlchemyEnum(TipoPersona), nullable=False) # Natural o Jurídica
-    tipo_documento: Mapped[TipoDocumento] = mapped_column(SQLAlchemyEnum(TipoDocumento), nullable=False) # Cédula, RIF, Pasaporte
-    
-    # Información personal
     nombre_completo: Mapped[str] = mapped_column(String(200), nullable=False) # Nombre completo o razón social
-    fecha_nacimiento: Mapped[Optional[date]] = mapped_column(Date, nullable=True) # Nullable para personas jurídicas
-    lugar_nacimiento: Mapped[Optional[str]] = mapped_column(String(100), nullable=True) # Ciudad y estado
-    nacionalidad: Mapped[str] = mapped_column(String(50), default="Venezolana") # Nacionalidad del cliente
-    estado_civil: Mapped[Optional[str]] = mapped_column(String(50), nullable=True) # Soltero, Casado, etc.
-    profesion_ocupacion: Mapped[Optional[str]] = mapped_column(String(100), nullable=True) # Profesión u ocupación
     
     # Información de contacto
     telefono: Mapped[str] = mapped_column(String(20), nullable=False) # Teléfono principal
@@ -91,14 +80,12 @@ class ClienteDB(Base, AuditMixin):
     codigo_postal: Mapped[Optional[str]] = mapped_column(String(10), nullable=True) # Código postal
     
     # Información financiera
-    perfil_riesgo: Mapped[PerfilRiesgo] = mapped_column(SQLAlchemyEnum(PerfilRiesgo), default=PerfilRiesgo.MODERADO) # Perfil de riesgo
     id_banco: Mapped[Optional[int]] = mapped_column(ForeignKey('bancos.id')) # Banco asociado por defecto
     tipo_cuenta: Mapped[Optional[str]] = mapped_column(String(30), nullable=True)  # Ahorros, Corriente
     numero_cuenta: Mapped[Optional[str]] = mapped_column(String(50), nullable=True) # Número de cuenta bancaria
     id_casa_bolsa: Mapped[Optional[int]] = mapped_column(ForeignKey('casas_bolsa.id')) # Casa de bolsa asociada por defecto
     
-    # Metadatos
-    notas: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    fecha_cierre: Mapped[Optional[date]] = mapped_column(Date, nullable=True) # Fecha de cierre del cliente
     
     # Relaciones
     cuentas = relationship("CuentaDB", back_populates="cliente", cascade="all, delete-orphan") # Cuentas bursátiles
@@ -108,25 +95,14 @@ class ClienteDB(Base, AuditMixin):
     movimientos = relationship("MovimientoDB", back_populates="cliente") # Movimientos de cuenta
     banco = relationship("BancoDB") # Banco asociado
     casa_bolsa = relationship("CasaBolsaDB") # Casa de bolsa asociada
+    operaciones = relationship("Operacion", back_populates="cliente") # Operaciones asociadas
     
     # Índices
     __table_args__ = (
         Index('idx_cliente_nombre', 'nombre_completo'), # Índice para búsquedas por nombre
         Index('idx_cliente_email', 'email'), # Índice para búsquedas por email
-        Index('idx_cliente_tipo_documento', 'tipo_documento'),  # Índice para búsquedas por tipo de documento
         Index('idx_cliente_tipo_persona', 'tipo_persona'), # Índice para búsquedas por tipo de persona
     )
-    
-    @validates('documento_id') # Validar cédula o RIF según tipo de persona
-    def validate_id(self, key, id_value):
-        """Validar cédula o RIF venezolano"""
-        if self.tipo_persona == TipoPersona.NATURAL:
-            if not validar_cedula(id_value):
-                raise ValueError(f"Cédula inválida: {id_value}")
-        if self.tipo_persona == TipoPersona.JURIDICA:
-            if not validar_rif(id_value):
-                raise ValueError(f"RIF inválido: {id_value}")
-        return id_value
     
     @validates('telefono') # Validar teléfono principal
     def validate_telefono_principal(self, key, telefono):
@@ -142,31 +118,16 @@ class ClienteDB(Base, AuditMixin):
             raise ValueError(f"Email inválido: {email}")
         return email
     
-    @hybrid_property
-    def edad(self):
-        """Calcular edad del cliente"""
-        if not self.fecha_nacimiento:
-            return None
-        today = date.today()
-        age = today.year - self.fecha_nacimiento.year
-        if (today.month, today.day) < (self.fecha_nacimiento.month, self.fecha_nacimiento.day):
-            age -= 1
-        return age
     
     def to_dict(self):
         """Convertir a diccionario"""
         return {
             'id': self.id,
             'tipo_persona': self.tipo_persona.value,
-            'tipo_documento': self.tipo_documento.value,
             'nombre_completo': self.nombre_completo,
-            'fecha_nacimiento': self.fecha_nacimiento.isoformat() if self.fecha_nacimiento else None,
             'edad': self.edad,
-            'telefono_principal': self.telefono_principal,
+            'telefono_principal': self.telefono,
             'email': self.email,
-            'perfil_riesgo': self.perfil_riesgo.value,
-            'limite_inversion_bs': float(self.limite_inversion_bs) if self.limite_inversion_bs else 0.0,
-            'limite_inversion_usd': float(self.limite_inversion_usd) if self.limite_inversion_usd else 0.0,
             'fecha_registro': self.fecha_registro.isoformat(),
             'activo': self.activo
         }
@@ -283,8 +244,6 @@ class ActivoDB(Base, AuditMixin):
             'sector': self.sector,
             'moneda': self.moneda,
             'precio_actual': float(self.precio_actual),
-            'precio_anterior': float(self.precio_anterior),
-            'variacion_diaria': float(self.variacion_diaria),
             'lote_standard': self.lote_standard,
             'activo': self.activo
         }
@@ -371,12 +330,10 @@ class OrdenDB(Base, AuditMixin):
             'tipo_orden': self.tipo_orden.value,
             'tipo_operacion': self.tipo_operacion.value,
             'cantidad': self.cantidad,
-            'precio': float(self.precio) if self.precio else None,
             'estado': self.estado.value,
             'fecha_creacion': self.fecha_registro.isoformat(),
             'cantidad_ejecutada': self.cantidad_ejecutada,
             'porcentaje_ejecutado': float(self.porcentaje_ejecutado),
-            'comision_total': float(self.comision_total) if self.comision_total else 0.0
         }
 
 class TransaccionDB(Base, AuditMixin):
