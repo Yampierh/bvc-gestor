@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 
-from .ui.main_window import MainWindow
+from .ui.windows.main_window import MainWindow
 from .utils.logger import logger
 from .database.engine import get_database
 from .core.app_state import AppState
@@ -53,10 +53,15 @@ class BVCGestorApp:
             return False
     
     def setup_app_state(self):
-        """Configurar estado de la aplicación"""
+        """Configurar estado de la aplicación con servicios reales"""
         logger.info("Configurando estado de la aplicación...")
         self.app_state = AppState()
-        logger.info("✓ Estado de aplicación inicializado")
+        
+        # Obtener la sesión de la DB ya configurada
+        db_session = get_database().get_session()
+        self.app_state.initialize_services(db_session)
+        
+        logger.info("✓ Estado y Servicios (Portfolio/Ordenes) inicializados")
     
     def setup_application(self):
         """Configurar aplicación PyQt6"""
@@ -103,7 +108,7 @@ class BVCGestorApp:
         logger.info("Creando ventana principal...")
         
         self.main_window = MainWindow(self.app_state)
-        self.main_window.setWindowTitle("BVC-GESTOR - Finanzas de Valores")
+        self.main_window.setWindowTitle("PYME - Finanzas de Valores")
         self.main_window.resize(1400, 800)
         
         logger.info("✓ Ventana principal creada")

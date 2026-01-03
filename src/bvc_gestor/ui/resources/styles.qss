@@ -1,0 +1,53 @@
+/* Fondos y General */
+QMainWindow, QWidget#MainContent {
+    background-color: #12141d; /* Fondo ultra oscuro */
+    color: #ffffff;
+}
+
+/* Sidebar */
+QFrame#Sidebar {
+    background-color: #1a1c26;
+    border-right: 1px solid #2d313e;
+}
+
+/* Tarjetas (DashCards) */
+QFrame#DashCard {
+    background-color: #1a1c26;
+    border-radius: 15px;
+    border: 1px solid #2d313e;
+}
+
+QFrame#DashCard:hover {
+    border: 1px solid #4a54ff; /* Brillo al pasar el mouse */
+}
+
+/* Botones del Sidebar */
+QPushButton#SidebarBtn {
+    background-color: transparent;
+    color: #63687e;
+    border-radius: 10px;
+    font-size: 18px;
+    padding: 10px;
+}
+
+QPushButton#SidebarBtn:checked {
+    background-color: #2d313e;
+    color: #4a54ff;
+}
+
+/* Tablas Modernas */
+QTableWidget {
+    background-color: #1a1c26;
+    border: none;
+    gridline-color: #2d313e;
+    border-radius: 10px;
+}
+
+QHeaderView::section {
+    background-color: #1a1c26;
+    color: #63687e;
+    padding: 10px;
+    border: none;
+    text-transform: uppercase;
+    font-weight: bold;
+}
