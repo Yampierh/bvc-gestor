@@ -1,11 +1,13 @@
 from .cuenta_repository import CuentaRepository
 from .orden_repository import OrdenRepository
+from .portafolio_repository import PortafolioRepository
 from sqlalchemy.orm import Session
 
 class RepositoryFactory:
     _repos = {
         'cuenta': CuentaRepository,
-        'orden': OrdenRepository
+        'orden': OrdenRepository,
+        'portafolio': PortafolioRepository
     }
 
     @staticmethod
