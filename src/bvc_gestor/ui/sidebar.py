@@ -110,20 +110,41 @@ class Sidebar(QWidget):
         layout.setSpacing(10)
         self.setLayout(layout)
         
-        # Logo/título
-        title_label = QLabel("BVC-GESTOR")
-        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title_label.setObjectName("sidebar_title")
-        title_label.setProperty("class", "title")
-        layout.addWidget(title_label)
+        # Logo/Título
+        title_widget = QWidget()
+        title_layout = QVBoxLayout()
+        title_widget.setLayout(title_layout)
+        
+        app_logo = QLabel("📈 PYME")
+        app_logo.setStyleSheet("""
+            QLabel {
+                font-size: 24px;
+                font-weight: 700;
+                color: #ffffff;
+                padding: 0 20px;
+                margin-bottom: 8px;
+            }
+        """)
+        title_layout.addWidget(app_logo)
+        
+        app_subtitle = QLabel("Sistema de Gestión Bursátil")
+        app_subtitle.setStyleSheet("""
+            QLabel {
+                font-size: 12px;
+                color: #b0b7c3;
+                padding: 0 20px;
+                margin-bottom: 24px;
+            }
+        """)
+        title_layout.addWidget(app_subtitle)
+        
+        layout.addWidget(title_widget)
         
         # Separador
         separator = QFrame()
         separator.setFrameShape(QFrame.Shape.HLine)
-        separator.setFrameShadow(QFrame.Shadow.Sunken)
-        separator.setObjectName("sidebar_separator")
+        separator.setStyleSheet("background-color: #2a3655; height: 1px; margin: 0 16px;")
         layout.addWidget(separator)
-        layout.addSpacing(10)
         
         # Botones de navegación
         nav_buttons = [
@@ -144,27 +165,6 @@ class Sidebar(QWidget):
         layout.addSpacerItem(QSpacerItem(20, 40, 
             QSizePolicy.Policy.Minimum, 
             QSizePolicy.Policy.Expanding))
-        
-        # Información de versión
-        version_frame = QFrame()
-        version_frame.setObjectName("sidebar_version_frame")
-        version_layout = QVBoxLayout()
-        version_frame.setLayout(version_layout)
-        
-        version_label = QLabel("v1.0.0")
-        version_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        version_label.setObjectName("sidebar_version")
-        version_label.setProperty("class", "caption")
-        
-        user_label = QLabel(f"Usuario: {self.app_state.usuario_actual or 'Anónimo'}")
-        user_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        user_label.setObjectName("sidebar_user")
-        user_label.setProperty("class", "caption")
-        
-        version_layout.addWidget(version_label)
-        version_layout.addWidget(user_label)
-        
-        layout.addWidget(version_frame)
     
     def setup_connections(self):
         """Configurar conexiones de señales"""

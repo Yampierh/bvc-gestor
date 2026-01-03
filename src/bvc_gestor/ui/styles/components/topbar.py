@@ -42,10 +42,10 @@ class TopbarStyles:
         }}
         
         /* Fecha y hora */
-        QLabel#topbar-datetime {{
+        QLabel#header-datetime {{
             color: {colors['text_secondary']};
             font-size: 14px;
-            padding: 0 15px;
+            padding: 0;
             border-right: 1px solid {colors['border_light']};
         }}
         

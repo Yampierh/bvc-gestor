@@ -8,10 +8,10 @@ from PyQt6.QtWidgets import (
     QTableWidgetItem, QHeaderView, QMessageBox, QToolBar,
     QStatusBar, QSplitter, QFrame, QGroupBox, QTextEdit,
     QDateEdit, QCheckBox, QSpinBox, QDoubleSpinBox, QTabWidget,
-    QFormLayout, QScrollArea, QSizePolicy
+    QFormLayout, QScrollArea, QSizePolicy, QDialog
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QDate, QTimer, QSize
-from PyQt6.QtGui import QIcon, QFont, QAction, QKeySequence, QShortcut
+from PyQt6.QtGui import QIcon, QFont, QAction, QKeySequence, QShortcut, QIntValidator
 import logging
 from datetime import datetime
 from typing import Optional, List, Dict, Any
@@ -30,14 +30,17 @@ from ...database.models_sql import ClienteDB, CuentaDB
 class ClientesTableWidget(QTableWidget):
     """Tabla personalizada para clientes"""
     
-    cliente_selected = pyqtSignal(str)  # Señal con ID del cliente
+    # Señal emitida al seleccionar un cliente (ID)
+    cliente_selected = pyqtSignal(str)  
     
-    def __init__(self):
+    # Inicializar tabla de clientes
+    def __init__(self): 
         super().__init__()
         self.setup_ui()
         self.selected_client_id = None
     
-    def setup_ui(self):
+    # Configurar interfaz de la tabla
+    def setup_ui(self): 
         """Configurar interfaz de la tabla"""
         # Configurar columnas
         self.setColumnCount(8)
@@ -55,10 +58,10 @@ class ClientesTableWidget(QTableWidget):
         # Ajustar ancho de columnas
         header = self.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  # ID
-        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)  # Nombre
+        header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)           # Nombre
         header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)  # Tipo
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)  # Teléfono
-        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)  # Email
+        header.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)           # Email
         header.setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)  # Perfil
         header.setSectionResizeMode(6, QHeaderView.ResizeMode.ResizeToContents)  # Capital
         header.setSectionResizeMode(7, QHeaderView.ResizeMode.ResizeToContents)  # Estado
@@ -90,7 +93,7 @@ class ClientesTableWidget(QTableWidget):
             
             # ID
             id_item = QTableWidgetItem(cliente.id)
-            id_item.setData(Qt.ItemDataRole.UserRole, cliente.id)  # Guardar ID como dato
+            id_item.setData(Qt.ItemDataRole.UserRole, cliente.id)
             self.setItem(row, 0, id_item)
             
             # Nombre
@@ -141,23 +144,34 @@ class ClientesTableWidget(QTableWidget):
             self.selected_client_id = client_id
             self.cliente_selected.emit(client_id)
 
-class ClienteFormWidget(QWidget):
+class ClienteFormWidget(QDialog):
     """Formulario para crear/editar clientes"""
     
-    cliente_saved = pyqtSignal(dict)  # Señal con datos del cliente
-    form_cleared = pyqtSignal()
+    # Señales del formulario
+    cliente_saved = pyqtSignal(dict)  # Guardar cliente
+    form_cleared = pyqtSignal() # Borrar Datos del formulario
     
-    def __init__(self, mode: str = "nuevo"):  # "nuevo" o "editar"
+    # Inicializar formulario
+    """def __init__(self, mode: str = "nuevo"):  # "nuevo" o "editar"
         super().__init__()
         self.mode = mode
         self.current_cliente_id = None
         self.setup_ui()
+        self.setup_connections()"""
+
+    def __init__(self, mode: str = "nuevo", parent=None):
+        super().__init__(parent)
+        self.mode = mode
+        self.current_cliente_id = None
+        self.setup_ui()
         self.setup_connections()
+        self.setWindowTitle("Nueva Orden Bursátil")
+        self.resize(700, 600)
     
+    # Configurar interfaz del formulario
     def setup_ui(self):
         """Configurar interfaz del formulario"""
         layout = QVBoxLayout()
-        layout.setSpacing(15)
         self.setLayout(layout)
         
         # Título del formulario
@@ -199,18 +213,20 @@ class ClienteFormWidget(QWidget):
         self.tipo_persona_combo.currentTextChanged.connect(self.on_tipo_persona_changed)
         basic_layout.addRow("Tipo de Persona:", self.tipo_persona_combo)
         
-        # Identificación
-        self.identificacion_edit = QLineEdit()
-        self.identificacion_edit.setPlaceholderText("V-12345678 o J-12345678-9")
-        basic_layout.addRow("Cédula/RIF:", self.identificacion_edit)
-        
         # Tipo de documento (se actualiza automáticamente)
         self.tipo_documento_label = QLabel()
         basic_layout.addRow("Tipo Documento:", self.tipo_documento_label)
         
+        # Identificación
+        self.identificacion_edit = QLineEdit()
+        self.identificacion_edit.setPlaceholderText("V-12345678 o J-12345678-9")
+        self.identificacion_edit.setMaxLength(12)
+        basic_layout.addRow("Cédula/RIF:", self.identificacion_edit)
+        
         # Nombre completo
         self.nombre_edit = QLineEdit()
         self.nombre_edit.setPlaceholderText("Nombre completo o razón social")
+        self.nombre_edit.setMaxLength(40)
         basic_layout.addRow("Nombre Completo:", self.nombre_edit)
         
         # Fecha de nacimiento (solo para naturales)
@@ -222,6 +238,8 @@ class ClienteFormWidget(QWidget):
         
         # Profesión/ocupación
         self.profesion_edit = QLineEdit()
+        self.profesion_edit.setPlaceholderText("Profesión u ocupación del cliente")
+        self.profesion_edit.setMaxLength(20)
         basic_layout.addRow("Profesión/Ocupación:", self.profesion_edit)
         
         tab_widget.addTab(basic_tab, "Información Básica")
@@ -235,31 +253,39 @@ class ClienteFormWidget(QWidget):
         # Teléfono principal
         self.telefono_principal_edit = QLineEdit()
         self.telefono_principal_edit.setPlaceholderText("0414-1234567")
+        self.telefono_principal_edit.setMaxLength(13)
+        self.telefono_principal_edit.setValidator(QIntValidator())
         contact_layout.addRow("Teléfono Principal:", self.telefono_principal_edit)
         
         # Teléfono secundario
         self.telefono_secundario_edit = QLineEdit()
-        self.telefono_secundario_edit.setPlaceholderText("0212-1234567 (opcional)")
+        self.telefono_secundario_edit.setPlaceholderText("0212-1234567 (Opcional)")
+        self.telefono_secundario_edit.setMaxLength(13)
+        self.telefono_secundario_edit.setValidator(QIntValidator())
         contact_layout.addRow("Teléfono Secundario:", self.telefono_secundario_edit)
         
         # Email
         self.email_edit = QLineEdit()
         self.email_edit.setPlaceholderText("cliente@email.com")
+        self.email_edit.setMaxLength(50)
         contact_layout.addRow("Email:", self.email_edit)
         
         # Dirección
-        self.direccion_edit = QTextEdit()
-        self.direccion_edit.setMaximumHeight(80)
+        self.direccion_edit = QLineEdit()
+        self.direccion_edit.setPlaceholderText("Calle, urbanización, edificio, apartamento")
+        self.direccion_edit.setMaxLength(50)
         contact_layout.addRow("Dirección:", self.direccion_edit)
         
         # Ciudad
         self.ciudad_edit = QLineEdit()
         self.ciudad_edit.setPlaceholderText("Caracas")
+        self.ciudad_edit.setMaxLength(20)
         contact_layout.addRow("Ciudad:", self.ciudad_edit)
         
         # Estado
         self.estado_edit = QLineEdit()
         self.estado_edit.setPlaceholderText("Distrito Capital")
+        self.estado_edit.setMaxLength(20)
         contact_layout.addRow("Estado:", self.estado_edit)
         
         tab_widget.addTab(contact_tab, "Contacto")
@@ -318,10 +344,14 @@ class ClienteFormWidget(QWidget):
         # Banco principal
         self.banco_edit = QLineEdit()
         self.banco_edit.setPlaceholderText("Banco de Venezuela, Banesco, etc.")
+        self.banco_edit.setMaxLength(30)
         bank_layout.addRow("Banco Principal:", self.banco_edit)
         
         # Número de cuenta
         self.numero_cuenta_edit = QLineEdit()
+        self.numero_cuenta_edit.setPlaceholderText("Número de cuenta bancaria")
+        self.numero_cuenta_edit.setMaxLength(30)
+        self.numero_cuenta_edit.setValidator(QIntValidator())
         bank_layout.addRow("Número de Cuenta:", self.numero_cuenta_edit)
         
         # Tipo de cuenta
@@ -357,8 +387,9 @@ class ClienteFormWidget(QWidget):
         notes_layout = QVBoxLayout()
         notes_tab.setLayout(notes_layout)
         
-        self.notas_edit = QTextEdit()
+        self.notas_edit = QLineEdit()
         self.notas_edit.setPlaceholderText("Notas adicionales sobre el cliente...")
+        self.notas_edit.setMaxLength(80)
         notes_layout.addWidget(self.notas_edit)
         
         tab_widget.addTab(notes_tab, "Notas")
@@ -487,7 +518,7 @@ class ClienteFormWidget(QWidget):
             'telefono_principal': self.telefono_principal_edit.text().strip(),
             'telefono_secundario': self.telefono_secundario_edit.text().strip() or None,
             'email': self.email_edit.text().strip().lower(),
-            'direccion': self.direccion_edit.toPlainText().strip(),
+            'direccion': self.direccion_edit.text().strip(),
             'ciudad': self.ciudad_edit.text().strip(),
             'estado': self.estado_edit.text().strip(),
             'perfil_riesgo': self.perfil_riesgo_combo.currentText(),
@@ -501,7 +532,7 @@ class ClienteFormWidget(QWidget):
             'tiene_patrimonio_declarado': self.patrimonio_check.isChecked(),
             'monto_patrimonio_usd': float(self.patrimonio_usd_spin.value()) if self.patrimonio_check.isChecked() else None,
             'monto_patrimonio_bs': float(self.patrimonio_bs_spin.value()) if self.patrimonio_check.isChecked() else None,
-            'notas': self.notas_edit.toPlainText().strip() or None,
+            'notas': self.notas_edit.text().strip() or None,
             'activo': True
         }
         return datos
@@ -675,7 +706,7 @@ class ClienteFormWidget(QWidget):
         
         # Notas
         if cliente.notas:
-            self.notas_edit.setText(cliente.notas)
+            self.notas_edit.setText(cliente.notas)\
 
 class ClientesWidget(QWidget):
     """Widget principal de gestión de clientes"""
@@ -1080,6 +1111,11 @@ class ClientesWidget(QWidget):
         self.detalles_widget.layout().addWidget(scroll_area)
     
     def nuevo_cliente(self):
+        dialog = ClienteFormWidget(self)
+        dialog.setWindowTitle("➕ Nuevo Cliente")
+        dialog.resize(600, 800)
+        dialog.exec()
+        
         """Crear nuevo cliente"""
         # Cambiar a pestaña de formulario
         self.right_tabs.setCurrentIndex(0)

@@ -1,0 +1,70 @@
+========================================================================
+GUÍA DE IMPLEMENTACIÓN: ECOSISTEMA FINANCIERO VENEZUELA 2026
+========================================================================
+
+Este documento contiene las instrucciones para implementar las listas de:
+1. Entidades Bancarias (SUDEBAN)
+2. Casas de Bolsa / Sociedades de Corretaje (SUNAVAL)
+3. Casas de Cambio (BCV)
+
+------------------------------------------------------------------------
+1. ESTRUCTURA DE LA BASE DE DATOS (SQL)
+------------------------------------------------------------------------
+Se recomienda una tabla única con tipos enumerados para facilitar reportes.
+
+CREATE TABLE entidades_financieras (
+    id SERIAL PRIMARY KEY,
+    codigo_entidad VARCHAR(4), -- Obligatorio para Bancos, NULL para otros
+    nombre_comercial VARCHAR(150) NOT NULL,
+    rif VARCHAR(15) NOT NULL UNIQUE,
+    sector VARCHAR(20) NOT NULL, -- 'BANCARIO', 'BURSATIL', 'CAMBIARIO'
+    estatus VARCHAR(15) DEFAULT 'ACTIVO',
+    ultima_actualizacion DATE DEFAULT CURRENT_DATE
+);
+
+------------------------------------------------------------------------
+2. ORDEN DE CARGA DE DATOS (CSV)
+------------------------------------------------------------------------
+Paso 1: Cargar 'bancos_venezuela.csv'
+       - Importante: Tratar la columna 'codigo' como TEXTO/VARCHAR.
+       - Si se importa como entero, el sistema fallará en pagos móviles.
+
+Paso 2: Cargar 'casas_bolsa_venezuela.csv'
+       - Dejar 'codigo_entidad' como NULL.
+       - Clasificar sector como 'BURSATIL'.
+
+Paso 3: Cargar 'casas_cambio_venezuela.csv'
+       - Clasificar sector como 'CAMBIARIO'.
+
+------------------------------------------------------------------------
+3. SCRIPT DE CARGA AUTOMATIZADA (PYTHON)
+------------------------------------------------------------------------
+Utilice el siguiente bloque de código para integrar los archivos:
+
+import pandas as pd
+import sqlite3
+
+def importar_todo():
+    # 1. Leer archivos
+    bancos = pd.read_csv('bancos_venezuela.csv')
+    bolsa = pd.read_csv('casas_bolsa_venezuela.csv')
+    cambio = pd.read_csv('casas_cambio_venezuela.csv')
+    
+    # 2. Estandarizar columnas
+    # Los bancos tienen código Sudeban, las demás no.
+    # Se concatenan en un solo DataFrame maestro.
+    
+    # 3. Conexión y Carga
+    conn = sqlite3.connect('finanzas_ve.db')
+    # ... (Proceso de inserción)
+    conn.close()
+
+------------------------------------------------------------------------
+4. REGLAS DE NEGOCIO Y VALIDACIÓN
+------------------------------------------------------------------------
+- Validación de RIF: Siempre debe incluir el guion (ej. J-00000000-0).
+- Códigos Sudeban: Deben tener longitud 4 (ej. '0105').
+- Fusión BNC/DelSur: El código 0157 debe redirigir internamente al 0191 
+  en procesos de liquidación masiva.
+
+========================================================================

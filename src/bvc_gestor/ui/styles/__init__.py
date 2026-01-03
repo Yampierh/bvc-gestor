@@ -637,31 +637,3 @@ def apply_global_styles(app):
     """Aplicar estilos globales a toda la aplicación"""
     sm = get_style_manager()
     sm.apply_stylesheet(app)
-
-
-# Prueba rápida del sistema
-if __name__ == "__main__":
-    print("🧪 Probando StyleManager completo...\n")
-    
-    # Obtener instancia
-    sm = get_style_manager()
-    
-    # Mostrar información
-    print(sm.debug_info())
-    
-    # Probar todos los temas
-    print(f"\n🔄 Probando todos los temas...")
-    for theme in sm.available_themes:
-        sm.set_theme(theme)
-        print(f"  • Tema: {theme}")
-        print(f"    - primary: {sm.get_color('primary')}")
-        print(f"    - background: {sm.get_color('background')}")
-        
-        # Obtener estilos
-        styles = sm.get_stylesheet()
-        print(f"    - tamaño estilos: {len(styles)} caracteres")
-    
-    # Volver a claro
-    sm.set_theme('light')
-    
-    print("\n✅ StyleManager funcionando correctamente")

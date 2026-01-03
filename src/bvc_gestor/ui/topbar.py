@@ -68,18 +68,19 @@ class Topbar(QWidget):
         layout.setSpacing(15)
         self.setLayout(layout)
         
-        # Título de la aplicación
-        self.title_label = QLabel("BVC-GESTOR")
-        self.title_label.setObjectName("topbar-title")  # ID para CSS
-        layout.addWidget(self.title_label)
-        
         # Espaciador
         layout.addStretch(1)
         
         # Fecha y hora
         self.datetime_label = QLabel()
-        self.datetime_label.setObjectName("topbar-datetime")  # ID para CSS
+        self.datetime_label.setObjectName("header-datetime")  # ID para CSS
         layout.addWidget(self.datetime_label)
+        
+        # Botón de capital total
+        self.capital_btn = QPushButton("📊 $0.00")
+        self.capital_btn.setObjectName("header-button")
+        self.capital_btn.setToolTip("Capital total gestionado")
+        layout.addWidget(self.capital_btn)
         
         # Botón de refrescar
         i_refresh = QIcon()

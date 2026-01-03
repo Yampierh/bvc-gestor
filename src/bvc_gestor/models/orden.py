@@ -26,7 +26,7 @@ class EstadoOrden(str, Enum):
 class Orden:
     """Orden bursátil"""
     
-    id: Optional[int] = None
+    id = int
     numero_orden: str
     cliente_id: str
     cuenta_id: int

@@ -8,7 +8,6 @@ from enum import Enum
 
 # Obtener el directorio base del proyecto (BVC-GESTOR/)
 BASE_DIR = Path(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
-# Debería ser: BVC-GESTOR/
 
 # Rutas de datos (relativas a BASE_DIR)
 DATA_DIR = BASE_DIR / "data"
@@ -33,7 +32,7 @@ create_directories()
 
 # Enums para Venezuela
 class Moneda(str, Enum):
-    BOLIVAR = "Bs"
+    BOLIVAR = "BS"
     DOLAR = "USD"
     EURO = "EUR"
 

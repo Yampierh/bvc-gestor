@@ -18,12 +18,12 @@ class StatusBar(QStatusBar):
     def __init__(self, app_state: AppState):
         super().__init__()
         self.app_state = app_state
-        self.style_manager = get_style_manager()  # NUEVO: StyleManager
+        self.style_manager = get_style_manager()  # StyleManager
         self.message_timeout = 3000  # 3 segundos para mensajes temporales
-        self.setObjectName("app-statusbar")  # NUEVO: ID para CSS
+        self.setObjectName("app-statusbar")  # ID para CSS
         self.setup_ui()
         self.start_timers()
-        self.apply_styles()  # NUEVO: Aplicar estilos
+        self.apply_styles()  # Aplicar estilos
         logger.info("Barra de estado inicializada")
     
     def setup_ui(self):
@@ -32,7 +32,7 @@ class StatusBar(QStatusBar):
         
         # Widget personalizado
         self.status_widget = QWidget()
-        self.status_widget.setObjectName("status-widget")  # NUEVO: ID para CSS
+        self.status_widget.setObjectName("status-widget")  # ID para CSS
         layout = QHBoxLayout()
         layout.setContentsMargins(10, 5, 10, 5)
         layout.setSpacing(20)
@@ -40,27 +40,22 @@ class StatusBar(QStatusBar):
         
         # Indicadores de estado
         self.db_status_label = QLabel("🔴 DB: Desconectada")
-        self.db_status_label.setObjectName("status-db")  # NUEVO: ID para CSS
+        self.db_status_label.setObjectName("status-db")  # ID para CSS
         self.db_status_label.setToolTip("Estado de la base de datos")
         layout.addWidget(self.db_status_label)
         
         self.user_label = QLabel("👤 Usuario: Anónimo")
-        self.user_label.setObjectName("status-user")  # NUEVO: ID para CSS
+        self.user_label.setObjectName("status-user")  # ID para CSS
         self.user_label.setToolTip("Usuario actual")
         layout.addWidget(self.user_label)
         
         self.changes_label = QLabel("💾 Cambios: Guardados")
-        self.changes_label.setObjectName("status-changes")  # NUEVO: ID para CSS
+        self.changes_label.setObjectName("status-changes")  # ID para CSS
         self.changes_label.setToolTip("Estado de los cambios")
         layout.addWidget(self.changes_label)
         
         # Espaciador
         layout.addStretch(1)
-        
-        # Versión
-        self.version_label = QLabel("v1.0")
-        self.version_label.setObjectName("status-version")  # NUEVO: ID para CSS
-        layout.addWidget(self.version_label)
         
         # Agregar widget a la barra de estado
         self.addPermanentWidget(self.status_widget, 1)
@@ -86,11 +81,11 @@ class StatusBar(QStatusBar):
             db_engine = get_database()
             if db_engine.test_connection():
                 self.db_status_label.setText("🟢 DB: Conectada")
-                self.db_status_label.setProperty("data-status", "connected")  # NUEVO: Atributo data
+                self.db_status_label.setProperty("data-status", "connected")  # Atributo data
                 self.app_state.base_datos_conectada = True
             else:
                 self.db_status_label.setText("🔴 DB: Desconectada")
-                self.db_status_label.setProperty("data-status", "disconnected")  # NUEVO: Atributo data
+                self.db_status_label.setProperty("data-status", "disconnected")  # Atributo data
                 self.app_state.base_datos_conectada = False
             
             # Usuario actual
@@ -102,10 +97,10 @@ class StatusBar(QStatusBar):
             # Cambios pendientes
             if self.app_state.cambios_pendientes:
                 self.changes_label.setText("💾 Cambios: Pendientes")
-                self.changes_label.setProperty("data-status", "pending")  # NUEVO: Atributo data
+                self.changes_label.setProperty("data-status", "pending")  # Atributo data
             else:
                 self.changes_label.setText("💾 Cambios: Guardados")
-                self.changes_label.setProperty("data-status", "saved")  # NUEVO: Atributo data
+                self.changes_label.setProperty("data-status", "saved")  # Atributo data
             
             # Actualizar última actualización
             self.app_state.ultima_actualizacion = QDateTime.currentDateTime()

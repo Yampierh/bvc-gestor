@@ -1,423 +1,154 @@
-# src/bvc_gestor/services/orden_service.py
-"""
-Servicio para gestión de órdenes bursátiles
-"""
-from decimal import Decimal
-from datetime import datetime, timedelta
-from typing import List, Dict, Any, Optional, Tuple
 import logging
+from decimal import Decimal
+from datetime import datetime
+from sqlalchemy.orm import Session
+from sqlalchemy import select, and_
 
-from ..database.engine import get_database
-from ..database.repositories import RepositoryFactory
-from ..database.models_sql import OrdenDB, CuentaDB, ClienteDB, TransaccionDB
-from ..utils.calculos_financieros import (
-    calcular_comision_bvc,
-    calcular_monto_total_orden,
-    validar_limites_cliente,
-    simular_ejecucion_orden
+from ..database.models_sql import (
+    OrdenDB, CuentaDB, ActivoDB, PortafolioItemDB, ClienteDB
 )
-from ..utils.constants import TipoOrden, TipoOperacion, EstadoOrden, Moneda
-from ..utils.logger import logger
+from ..utils.constants import EstadoOrden, TipoOrden, TipoOperacion
+
+# Configuración de Logging
+logger = logging.getLogger(__name__)
+
+class SaldoInsuficienteError(Exception):
+    """Excepción para fondos insuficientes"""
+    pass
+
+class ActivoNoEncontradoError(Exception):
+    """Excepción cuando el activo no existe"""
+    pass
+
+class PosicionInsuficienteError(Exception):
+    """Excepción cuando se intenta vender más de lo que se tiene"""
+    pass
 
 class OrdenService:
-    """Servicio para operaciones con órdenes"""
-    
-    def __init__(self):
-        self.db_session = None
-    
-    def obtener_sesion(self):
-        """Obtener sesión de base de datos"""
-        if self.db_session is None:
-            self.db_session = get_database().get_session()
-        return self.db_session
-    
-    def generar_numero_orden(self) -> str:
-        """Generar número de orden único"""
-        import random
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        random_part = random.randint(1000, 9999)
-        return f"ORD-{timestamp}-{random_part}"
-    
-    def validar_orden(self, orden_data: Dict[str, Any]) -> Tuple[bool, str]:
+    """
+    Servicio centralizado para la gestión de órdenes bursátiles.
+    Maneja validaciones, cálculo de comisiones y bloqueo de fondos.
+    """
+
+    # Tarifas BVC (Ejemplo aproximado, esto debería venir de una tabla de configuración)
+    TARIFA_CASA_BOLSA = Decimal("0.0090")  # 0.90%
+    TARIFA_BOLSA = Decimal("0.0010")       # 0.10%
+    TARIFA_CAJA = Decimal("0.0005")        # 0.05%
+    IVA = Decimal("0.16")                  # 16%
+
+    def __init__(self, db: Session):
+        self.db = db
+
+    def calcular_comisiones(self, monto_bruto: Decimal) -> dict:
         """
-        Validar una orden antes de crearla
+        Calcula el desglose de comisiones para una operación.
+        """
+        comision_base = monto_bruto * (self.TARIFA_CASA_BOLSA + self.TARIFA_BOLSA + self.TARIFA_CAJA)
+        # En Venezuela suele haber un mínimo, por ahora usaremos el % simple
+        iva_comision = comision_base * self.IVA
+        total_comision = comision_base + iva_comision
+
+        return {
+            "base": round(comision_base, 2),
+            "iva": round(iva_comision, 2),
+            "total": round(total_comision, 2)
+        }
+
+    def crear_orden(
+        self, 
+        cliente_id: int, 
+        cuenta_id: int, 
+        ticker: str, 
+        tipo_orden: TipoOrden, 
+        cantidad: int, 
+        precio: Decimal
+    ) -> OrdenDB:
+        """
+        Crea una orden nueva, valida fondos y bloquea el dinero/acciones.
+        """
+        logger.info(f"Iniciando creación de orden: {tipo_orden} {cantidad} {ticker} @ {precio}")
+
+        # 1. Validaciones básicas
+        cuenta = self.db.get(CuentaDB, cuenta_id)
+        if not cuenta or cuenta.cliente_id != cliente_id:
+            raise ValueError("Cuenta inválida o no pertenece al cliente")
         
-        Returns:
-            (es_valida, mensaje_error)
-        """
-        try:
-            # Validaciones básicas
-            if orden_data['cantidad'] <= 0:
-                return False, "La cantidad debe ser mayor a cero"
-            
-            if orden_data['tipo_operacion'] == TipoOperacion.LIMITADA.value:
-                if not orden_data.get('precio_limite'):
-                    return False, "Las órdenes limitadas requieren precio límite"
-                if orden_data['precio_limite'] <= 0:
-                    return False, "El precio límite debe ser mayor a cero"
-            
-            # Obtener información del cliente y cuenta
-            session = self.obtener_sesion()
-            cliente_repo = RepositoryFactory.get_repository(session, 'cliente')
-            cuenta_repo = RepositoryFactory.get_repository(session, 'cuenta')
-            activo_repo = RepositoryFactory.get_repository(session, 'activo')
-            
-            cliente = cliente_repo.get(orden_data['cliente_id'])
-            if not cliente:
-                return False, "Cliente no encontrado"
-            
-            cuenta = cuenta_repo.get(orden_data['cuenta_id'])
-            if not cuenta:
-                return False, "Cuenta no encontrada"
-            
-            activo = activo_repo.get(orden_data['activo_id'])
-            if not activo:
-                return False, "Activo no encontrado"
-            
-            # Validar límites y saldos
-            precio = orden_data.get('precio_limite') or orden_data.get('precio') or activo.precio_actual
-            monto_operacion = calcular_monto_total_orden(
-                orden_data['cantidad'],
-                precio,
-                orden_data['tipo_orden']
-            )
-            
-            # Determinar moneda
-            moneda = activo.moneda if activo.moneda in ['USD', 'Bs'] else 'USD'
-            
-            # Obtener límites y saldos según moneda
-            if moneda == 'USD':
-                limite = cliente.limite_inversion_usd or Decimal('0.00')
-                saldo = cuenta.saldo_disponible_usd or Decimal('0.00')
-            else:
-                limite = cliente.limite_inversion_bs or Decimal('0.00')
-                saldo = cuenta.saldo_disponible_bs or Decimal('0.00')
-            
-            # Validar
-            es_valida, mensaje = validar_limites_cliente(
-                monto_operacion,
-                moneda,
-                limite,
-                saldo,
-                cliente.perfil_riesgo.value
-            )
-            
-            if not es_valida:
-                return False, mensaje
-            
-            # Validar horario bursátil (simulado)
-            hora_actual = datetime.now().time()
-            hora_apertura = datetime.strptime("09:30", "%H:%M").time()
-            hora_cierre = datetime.strptime("14:00", "%H:%M").time()
-            
-            if not (hora_apertura <= hora_actual <= hora_cierre):
-                return False, "Fuera del horario bursátil (09:30 - 14:00)"
-            
-            return True, "Orden válida"
-            
-        except Exception as e:
-            logger.error(f"Error validando orden: {e}")
-            return False, f"Error de validación: {str(e)}"
-    
-    def crear_orden(self, orden_data: Dict[str, Any]) -> Tuple[Optional[OrdenDB], str]:
-        """
-        Crear una nueva orden bursátil
-        
-        Returns:
-            (orden_creada, mensaje)
-        """
-        try:
-            # Validar orden
-            es_valida, mensaje = self.validar_orden(orden_data)
-            if not es_valida:
-                return None, mensaje
-            
-            session = self.obtener_sesion()
-            activo_repo = RepositoryFactory.get_repository(session, 'activo')
-            
-            # Obtener precio si no está especificado (orden de mercado)
-            activo = activo_repo.get(orden_data['activo_id'])
-            precio = orden_data.get('precio_limite') or orden_data.get('precio')
-            
-            if not precio:
-                # Para órdenes de mercado, usar precio actual
-                orden_data['precio'] = activo.precio_actual
-                precio = activo.precio_actual
-            
-            # Calcular comisiones
-            monto_operacion = calcular_monto_total_orden(
-                orden_data['cantidad'],
-                precio,
-                orden_data['tipo_orden']
-            )
-            
-            comisiones = calcular_comision_bvc(
-                abs(monto_operacion),
-                tipo_operacion="normal"
-            )
-            
-            # Crear objeto de orden
-            orden = OrdenDB(
-                numero_orden=self.generar_numero_orden(),
-                cliente_id=orden_data['cliente_id'],
-                cuenta_id=orden_data['cuenta_id'],
-                activo_id=orden_data['activo_id'],
-                tipo_orden=orden_data['tipo_orden'],
-                tipo_operacion=orden_data['tipo_operacion'],
-                cantidad=orden_data['cantidad'],
-                precio=precio if orden_data['tipo_operacion'] == TipoOperacion.MERCADO.value else None,
-                precio_limite=orden_data.get('precio_limite'),
-                comision_base=comisiones['comision_base'],
-                iva_comision=comisiones['iva'],
-                comision_total=comisiones['comision_total'],
-                fecha_vencimiento=datetime.now() + timedelta(days=1),  # Vence en 24 horas
-                notas=orden_data.get('notas')
-            )
-            
-            # Si es orden de compra, bloquear fondos
-            if orden_data['tipo_orden'] == TipoOrden.COMPRA.value:
-                self.bloquear_fondos(
-                    orden_data['cuenta_id'],
-                    activo.moneda,
-                    abs(monto_operacion) + comisiones['comision_total']
+        activo = self.db.get(ActivoDB, ticker)
+        if not activo:
+            raise ActivoNoEncontradoError(f"El activo {ticker} no existe")
+
+        monto_bruto = Decimal(cantidad) * precio
+        comisiones = self.calcular_comisiones(monto_bruto)
+        monto_total_operacion = monto_bruto + comisiones["total"]
+
+        # 2. Lógica de COMPRA
+        if tipo_orden == TipoOrden.COMPRA:
+            # Verificar disponibilidad (Saldo Disponible >= Monto + Comisiones)
+            if cuenta.saldo_disponible_bs < monto_total_operacion:
+                deficit = monto_total_operacion - cuenta.saldo_disponible_bs
+                raise SaldoInsuficienteError(
+                    f"Saldo insuficiente. Requerido: {monto_total_operacion}, Disponible: {cuenta.saldo_disponible_bs}"
                 )
             
-            # Guardar en base de datos
-            orden_repo = RepositoryFactory.get_repository(session, 'orden')
-            orden_creada = orden_repo.create(orden)
-            
-            if orden_creada:
-                logger.info(f"Orden creada: {orden_creada.numero_orden} para cliente {orden_data['cliente_id']}")
-                return orden_creada, "Orden creada exitosamente"
-            else:
-                return None, "Error al crear la orden"
-            
-        except Exception as e:
-            logger.error(f"Error creando orden: {e}")
-            return None, f"Error creando orden: {str(e)}"
-    
-    def bloquear_fondos(self, cuenta_id: int, moneda: str, monto: Decimal):
-        """Bloquear fondos para una orden pendiente"""
-        try:
-            session = self.obtener_sesion()
-            cuenta_repo = RepositoryFactory.get_repository(session, 'cuenta')
-            
-            cuenta = cuenta_repo.get(cuenta_id)
-            if not cuenta:
-                raise ValueError("Cuenta no encontrada")
-            
-            # Determinar campo según moneda
-            campo_saldo = f"saldo_disponible_{moneda.lower()}"
-            campo_bloqueado = f"saldo_bloqueado_{moneda.lower()}"
-            
-            if not hasattr(cuenta, campo_saldo) or not hasattr(cuenta, campo_bloqueado):
-                raise ValueError(f"Moneda no soportada: {moneda}")
-            
-            # Verificar saldo disponible
-            saldo_disponible = getattr(cuenta, campo_saldo) or Decimal('0.00')
-            if saldo_disponible < monto:
-                raise ValueError(f"Saldo insuficiente. Disponible: {saldo_disponible}, Necesario: {monto}")
-            
-            # Transferir de disponible a bloqueado
-            setattr(cuenta, campo_saldo, saldo_disponible - monto)
-            
-            saldo_bloqueado = getattr(cuenta, campo_bloqueado) or Decimal('0.00')
-            setattr(cuenta, campo_bloqueado, saldo_bloqueado + monto)
-            
-            session.commit()
-            logger.info(f"Bloqueados {monto} {moneda} en cuenta {cuenta_id}")
-            
-        except Exception as e:
-            logger.error(f"Error bloqueando fondos: {e}")
-            raise
-    
-    def desbloquear_fondos(self, cuenta_id: int, moneda: str, monto: Decimal):
-        """Desbloquear fondos (orden cancelada o rechazada)"""
-        try:
-            session = self.obtener_sesion()
-            cuenta_repo = RepositoryFactory.get_repository(session, 'cuenta')
-            
-            cuenta = cuenta_repo.get(cuenta_id)
-            if not cuenta:
-                raise ValueError("Cuenta no encontrada")
-            
-            campo_saldo = f"saldo_disponible_{moneda.lower()}"
-            campo_bloqueado = f"saldo_bloqueado_{moneda.lower()}"
-            
-            if not hasattr(cuenta, campo_saldo) or not hasattr(cuenta, campo_bloqueado):
-                raise ValueError(f"Moneda no soportada: {moneda}")
-            
-            # Verificar saldo bloqueado
-            saldo_bloqueado = getattr(cuenta, campo_bloqueado) or Decimal('0.00')
-            if saldo_bloqueado < monto:
-                logger.warning(f"Saldo bloqueado ({saldo_bloqueado}) menor a monto a desbloquear ({monto})")
-                monto = saldo_bloqueado  # Desbloquear solo lo disponible
-            
-            # Transferir de bloqueado a disponible
-            setattr(cuenta, campo_bloqueado, saldo_bloqueado - monto)
-            
-            saldo_disponible = getattr(cuenta, campo_saldo) or Decimal('0.00')
-            setattr(cuenta, campo_saldo, saldo_disponible + monto)
-            
-            session.commit()
-            logger.info(f"Desbloqueados {monto} {moneda} en cuenta {cuenta_id}")
-            
-        except Exception as e:
-            logger.error(f"Error desbloqueando fondos: {e}")
-            raise
-    
-    def cancelar_orden(self, orden_id: int) -> Tuple[bool, str]:
-        """Cancelar una orden pendiente"""
-        try:
-            session = self.obtener_sesion()
-            orden_repo = RepositoryFactory.get_repository(session, 'orden')
-            activo_repo = RepositoryFactory.get_repository(session, 'activo')
-            
-            orden = orden_repo.get(orden_id)
-            if not orden:
-                return False, "Orden no encontrada"
-            
-            if orden.estado != EstadoOrden.PENDIENTE:
-                return False, f"No se puede cancelar una orden en estado: {orden.estado.value}"
-            
-            # Obtener información para desbloquear fondos
-            activo = activo_repo.get(orden.activo_id)
-            moneda = activo.moneda if activo.moneda in ['USD', 'Bs'] else 'USD'
-            
-            monto_total = Decimal(orden.cantidad) * (orden.precio or orden.precio_limite or Decimal('0.00'))
-            monto_a_desbloquear = monto_total + (orden.comision_total or Decimal('0.00'))
-            
-            # Solo desbloquear si es orden de compra
-            if orden.tipo_orden == TipoOrden.COMPRA:
-                self.desbloquear_fondos(orden.cuenta_id, moneda, monto_a_desbloquear)
-            
-            # Actualizar estado
-            orden.estado = EstadoOrden.CANCELADA
-            session.commit()
-            
-            logger.info(f"Orden cancelada: {orden.numero_orden}")
-            return True, "Orden cancelada exitosamente"
-            
-        except Exception as e:
-            logger.error(f"Error cancelando orden: {e}")
-            return False, f"Error cancelando orden: {str(e)}"
-    
-    def simular_orden(self, orden_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Simular ejecución de una orden antes de crearla"""
-        try:
-            session = self.obtener_sesion()
-            activo_repo = RepositoryFactory.get_repository(session, 'activo')
-            
-            activo = activo_repo.get(orden_data['activo_id'])
-            if not activo:
-                return {"error": "Activo no encontrado"}
-            
-            # Obtener precio para simulación
-            precio_solicitado = orden_data.get('precio_limite') or orden_data.get('precio')
-            precio_mercado = activo.precio_actual
-            
-            # Simular ejecución
-            simulacion = simular_ejecucion_orden(
-                orden_data['tipo_orden'],
-                orden_data['cantidad'],
-                precio_solicitado,
-                precio_mercado
+            # BLOQUEO DE FONDOS (Movimiento contable interno)
+            cuenta.saldo_disponible_bs -= monto_total_operacion
+            cuenta.saldo_bloqueado_bs += monto_total_operacion
+            logger.info(f"Fondos bloqueados para compra: {monto_total_operacion} Bs")
+
+        # 3. Lógica de VENTA
+        elif tipo_orden == TipoOrden.VENTA:
+            # Buscar si tiene las acciones en portafolio
+            stmt = select(PortafolioItemDB).where(
+                and_(
+                    PortafolioItemDB.cuenta_id == cuenta_id,
+                    PortafolioItemDB.activo_id == ticker
+                )
             )
+            item_portafolio = self.db.execute(stmt).scalar_one_or_none()
+
+            # Necesitamos considerar acciones que ya están comprometidas en otras órdenes de venta abiertas
+            # (Esta lógica avanzada la podemos refinar luego, por ahora validamos saldo total)
+            if not item_portafolio or item_portafolio.cantidad < cantidad:
+                cantidad_actual = item_portafolio.cantidad if item_portafolio else 0
+                raise PosicionInsuficienteError(
+                    f"No tienes suficientes acciones. Requerido: {cantidad}, Tienes: {cantidad_actual}"
+                )
             
-            # Calcular comisiones
-            monto_simulado = Decimal(orden_data['cantidad']) * simulacion['precio_ejecucion']
-            comisiones = calcular_comision_bvc(monto_simulado)
-            
-            # Calcular total
-            monto_total = monto_simulado + comisiones['comision_total']
-            if orden_data['tipo_orden'] == TipoOrden.VENTA.value:
-                monto_total = monto_simulado - comisiones['comision_total']
-            
-            # Validar contra límites de cliente
-            cliente_repo = RepositoryFactory.get_repository(session, 'cliente')
-            cuenta_repo = RepositoryFactory.get_repository(session, 'cuenta')
-            
-            cliente = cliente_repo.get(orden_data['cliente_id'])
-            cuenta = cuenta_repo.get(orden_data['cuenta_id'])
-            
-            moneda = activo.moneda if activo.moneda in ['USD', 'Bs'] else 'USD'
-            
-            if moneda == 'USD':
-                limite = cliente.limite_inversion_usd or Decimal('0.00')
-                saldo = cuenta.saldo_disponible_usd or Decimal('0.00')
-            else:
-                limite = cliente.limite_inversion_bs or Decimal('0.00')
-                saldo = cuenta.saldo_disponible_bs or Decimal('0.00')
-            
-            es_valida, mensaje_validacion = validar_limites_cliente(
-                monto_total if orden_data['tipo_orden'] == TipoOrden.COMPRA.value else -monto_total,
-                moneda,
-                limite,
-                saldo,
-                cliente.perfil_riesgo.value
-            )
-            
-            return {
-                'simulacion': simulacion,
-                'comisiones': {
-                    'base': float(comisiones['comision_base']),
-                    'iva': float(comisiones['iva']),
-                    'total': float(comisiones['comision_total'])
-                },
-                'montos': {
-                    'operacion': float(monto_simulado),
-                    'comisiones': float(comisiones['comision_total']),
-                    'total': float(monto_total)
-                },
-                'validacion': {
-                    'es_valida': es_valida,
-                    'mensaje': mensaje_validacion
-                },
-                'activo': {
-                    'simbolo': activo.id,
-                    'nombre': activo.nombre,
-                    'precio_actual': float(activo.precio_actual),
-                    'moneda': activo.moneda
-                }
-            }
-            
-        except Exception as e:
-            logger.error(f"Error simulando orden: {e}")
-            return {"error": f"Error en simulación: {str(e)}"}
-    
-    def obtener_ordenes_pendientes(self, cliente_id: Optional[str] = None) -> List[OrdenDB]:
-        """Obtener órdenes pendientes"""
+            # En venta, no bloqueamos dinero, bloqueamos "acciones" (lógica futura)
+            # Pero las comisiones se descontarán del resultado final (Neto a cobrar)
+
+        # 4. Crear el objeto OrdenDB
+        nueva_orden = OrdenDB(
+            numero_orden=self._generar_numero_orden(),
+            cliente_id=cliente_id,
+            cuenta_id=cuenta_id,
+            activo_id=ticker,
+            tipo_orden=tipo_orden,
+            tipo_operacion=TipoOperacion.LIMITADA, # Por defecto Limitada
+            cantidad=cantidad,
+            precio_limite=precio,
+            comision_base=comisiones["base"],
+            iva_comision=comisiones["iva"],
+            estado=EstadoOrden.PENDIENTE,
+            # Guardamos la tasa del BCV solo si aplica (aquí asumimos 1 para Bs)
+            tasa_bcv_snapshot=Decimal("1.0000") 
+        )
+
+        self.db.add(nueva_orden)
+        
+        # 5. Commit de la transacción (Orden + Actualización de Saldo)
         try:
-            session = self.obtener_sesion()
-            orden_repo = RepositoryFactory.get_repository(session, 'orden')
-            
-            if cliente_id:
-                return orden_repo.get_orders_by_client(cliente_id)
-            else:
-                return orden_repo.get_pending_orders()
-                
+            self.db.commit()
+            self.db.refresh(nueva_orden)
+            logger.info(f"Orden creada exitosamente: ID {nueva_orden.id}")
+            return nueva_orden
         except Exception as e:
-            logger.error(f"Error obteniendo órdenes pendientes: {e}")
-            return []
-    
-    def obtener_historial_ordenes(self, cliente_id: str, dias: int = 30) -> List[OrdenDB]:
-        """Obtener historial de órdenes de un cliente"""
-        try:
-            session = self.obtener_sesion()
-            orden_repo = RepositoryFactory.get_repository(session, 'orden')
-            
-            # Obtener todas las órdenes del cliente
-            ordenes = orden_repo.get_orders_by_client(cliente_id)
-            
-            # Filtrar por fecha (últimos N días)
-            fecha_limite = datetime.now() - timedelta(days=dias)
-            ordenes_filtradas = [
-                orden for orden in ordenes
-                if orden.fecha_creacion >= fecha_limite
-            ]
-            
-            return ordenes_filtradas
-            
-        except Exception as e:
-            logger.error(f"Error obteniendo historial de órdenes: {e}")
-            return []
+            self.db.rollback()
+            logger.error(f"Error al guardar la orden: {e}")
+            raise e
+
+    def _generar_numero_orden(self) -> str:
+        """Genera un ID único legible, ej: OR-20231027-0001"""
+        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        # En producción usaríamos una secuencia o UUID
+        return f"ORD-{timestamp}"

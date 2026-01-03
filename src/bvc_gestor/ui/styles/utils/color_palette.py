@@ -59,7 +59,7 @@ class ColorPalette:
         # Colores de fondo y superficie
         'background': {
             'light': '#f8f9fa',    # Fondo gris claro
-            'dark': '#1a1d21'      # Fondo negro azulado
+            'dark': '#f5f7fa'      # Fondo negro azulado
         },
         'surface': {
             'light': '#ffffff',    # Superficie blanca

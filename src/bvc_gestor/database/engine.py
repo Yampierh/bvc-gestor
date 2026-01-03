@@ -6,8 +6,6 @@ import os
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import sessionmaker, Session, declarative_base
 from sqlalchemy.pool import StaticPool
-from typing import Optional
-import logging
 
 from ..utils.constants import DATABASE_DIR
 from ..utils.logger import logger

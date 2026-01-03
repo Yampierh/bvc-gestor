@@ -55,7 +55,7 @@ class MainWindow(QMainWindow):
     def setup_ui(self):
         """Configurar interfaz de usuario"""
         # Configurar ventana principal
-        self.setWindowTitle("BVC-GESTOR")
+        self.setWindowTitle("PYME - Finanzas de Valores")
         
         # Configurar icono de la ventana (si existe)
         try:

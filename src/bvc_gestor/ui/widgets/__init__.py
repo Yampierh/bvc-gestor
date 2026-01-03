@@ -6,7 +6,7 @@ from .dashboard_widget import DashboardWidget
 from .clientes_widget import ClientesWidget
 from .ordenes_widget import OrdenesWidget
 
-# Placeholder widgets - se implementarán en días posteriores
+# Placeholder widgets para módulos en desarrollo
 class PortafolioWidget:
     def __init__(self, app_state):
         from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel

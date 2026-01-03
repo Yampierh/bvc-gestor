@@ -15,7 +15,7 @@ def validar_cedula(cedula: str) -> bool:
     if not cedula:
         return False
     
-    patron = r'^[VEve]-?\d{7,8}$'
+    patron = r'^[VEPvep]-?\d{7,8}$'
     if not re.match(patron, cedula):
         return False
     
@@ -32,12 +32,12 @@ def validar_cedula(cedula: str) -> bool:
 def validar_rif(rif: str) -> bool:
     """
     Validar RIF venezolano (J-12345678-9)
-    Formato: [J|G|V|E]-[8 dígitos]-[1 dígito verificador]
+    Formato: [J|G]-[8 dígitos]-[1 dígito verificador]
     """
     if not rif:
         return False
     
-    patron = r'^[JGVEPjgvep]-?\d{8}-?\d$'
+    patron = r'^[JGjg]-?\d{8}-?\d$'
     if not re.match(patron, rif):
         return False
     
