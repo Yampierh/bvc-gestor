@@ -1,11 +1,11 @@
 
 [project]
 
-name = "bvc-gestor"
+name = "PYME"
 
-version = "1.0.0"
+version = "1.0"
 
-description = "Gestor de Bolsa de Valores de Caracas"
+description = "Gestor de Compra-venta en la Bolsa de Valores "
 
 authors = [
 

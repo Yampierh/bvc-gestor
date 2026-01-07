@@ -1,0 +1,61 @@
+/* Estilo General para todos los LineEdit del programa */
+QLineEdit {
+    background-color: #0d1117;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    padding: 10px;
+    font-size: 13px;
+}
+
+QLineEdit:focus {
+    border: 1px solid #58a6ff;
+    background-color: #161b22;
+}
+
+/* Títulos de sección dentro del formulario */
+QLabel[class="sectionTitle"] {
+    color: #8b949e;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-bottom: 1px solid #30363d;
+    margin-top: 15px;
+    padding-bottom: 5px;
+}
+
+/* El título principal del formulario */
+QLabel#formTitle {
+    color: #58a6ff;
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+/* El botón de guardar con estilo resaltado */
+QPushButton#btnGuardar {
+    background-color: #238636;
+    color: white;
+    font-weight: bold;
+    padding: 12px;
+    border-radius: 6px;
+    margin-top: 20px;
+}
+
+QPushButton#btnGuardar:hover {
+    background-color: #2ea043;
+}
+
+/* Contenedores */
+#formContainer, #formWidget {
+    background-color: #161b22;
+    border: none;
+}
+
+QComboBox {
+    background-color: #0d1117;
+    color: white;
+    padding: 8px;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+}

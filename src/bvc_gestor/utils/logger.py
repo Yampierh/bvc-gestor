@@ -12,7 +12,7 @@ from ..utils.constants import DATA_DIR
 class AppLogger:
     """Logger centralizado para la aplicación"""
     
-    def __init__(self, name="BVC-GESTOR"):
+    def __init__(self, name="PYME"):
         self.logger = logging.getLogger(name)
         self.logger.setLevel(logging.DEBUG)
         
@@ -52,7 +52,7 @@ class AppLogger:
 # Singleton logger
 _logger_instance = None
 
-def get_logger(name="BVC-GESTOR"):
+def get_logger(name="PYME"):
     """Obtener instancia del logger"""
     global _logger_instance
     if _logger_instance is None:

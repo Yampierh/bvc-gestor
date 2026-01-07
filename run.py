@@ -1,9 +1,8 @@
 # run.py
 """
-Script de ejecución principal para BVC-GESTOR
+Script de ejecución principal para PYME
 """
 import sys
-import os
 from pathlib import Path
 
 # Añadir el directorio src al path
@@ -14,17 +13,17 @@ def check_dependencies():
     """Verificar dependencias necesarias"""
     try:
         from PyQt6.QtCore import QT_VERSION_STR
-        print(f"✓ Qt version: {QT_VERSION_STR}")
+        print(f"Qt version: {QT_VERSION_STR}")
         
         import sqlalchemy
-        print(f"✓ SQLAlchemy version: {sqlalchemy.__version__}")
+        print(f"SQLAlchemy version: {sqlalchemy.__version__}")
         
         import pandas
-        print(f"✓ Pandas version: {pandas.__version__}")
+        print(f"Pandas version: {pandas.__version__}")
         
         return True
     except ImportError as e:
-        print(f"✗ Dependencia faltante: {e}")
+        print(f"Dependencia faltante: {e}")
         print("\nInstale las dependencias con:")
         print("pip install -r requirements.txt")
         return False
@@ -53,14 +52,14 @@ def setup_environment():
             print(f"⚠  Archivo .env no encontrado. Copiando desde .env.example")
             import shutil
             shutil.copy(env_example, env_file)
-            print(f"✓ Archivo .env creado. Por favor, configúrelo.")
+            print(f" Archivo .env creado. Por favor, configúrelo.")
         else:
             print("⚠  Archivo .env.example no encontrado")
 
 def main():
     """Función principal"""
     print("=" * 60)
-    print("BVC-GESTOR - Gestor de Bolsa de Valores de Caracas")
+    print("PYME - Gestor para compra-venta en la Bolsa de Valores de Caracas")
     print("=" * 60)
     
     # Configurar entorno
@@ -70,17 +69,17 @@ def main():
     if not check_dependencies():
         return 1
     
-    print("\n🚀 Iniciando aplicación...")
+    print("\nIniciando aplicación")
     
     try:
         from bvc_gestor.main import main as app_main
         return app_main()
     except ImportError as e:
-        print(f"✗ Error importando módulos: {e}")
+        print(f"Error importando módulos: {e}")
         print("\nAsegúrese de que la estructura del proyecto sea correcta.")
         return 1
     except Exception as e:
-        print(f"✗ Error inesperado: {e}")
+        print(f"Error inesperado: {e}")
         import traceback
         traceback.print_exc()
         return 1

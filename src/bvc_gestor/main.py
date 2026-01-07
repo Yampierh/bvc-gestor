@@ -1,16 +1,14 @@
 # src/bvc_gestor/main.py
 """
-Punto de entrada principal de la aplicación BVC-GESTOR
+Punto de entrada principal de la aplicación PYME
 """
 import sys
-import os
 from pathlib import Path
 
 # Añadir el directorio src al path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from PyQt6.QtWidgets import QApplication
-from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
 
 from .ui.windows.main_window import MainWindow
@@ -39,11 +37,11 @@ class BVCGestorApp:
         try:
             db_engine = get_database()
             if db_engine.test_connection():
-                logger.info("✓ Conexión a base de datos exitosa")
+                logger.info("Conexión a base de datos exitosa")
                 
                 # Crear tablas si no existen
                 db_engine.create_tables()
-                logger.info("✓ Tablas de base de datos verificadas")
+                logger.info("Tablas de base de datos verificadas")
             else:
                 logger.error("✗ Error conectando a base de datos")
                 return False
@@ -61,7 +59,7 @@ class BVCGestorApp:
         db_session = get_database().get_session()
         self.app_state.initialize_services(db_session)
         
-        logger.info("✓ Estado y Servicios (Portfolio/Ordenes) inicializados")
+        logger.info("Estado y Servicios (Portfolio/Ordenes) inicializados")
     
     def setup_application(self):
         """Configurar aplicación PyQt6"""
@@ -69,9 +67,9 @@ class BVCGestorApp:
         
         # Crear aplicación
         self.app = QApplication(sys.argv)
-        self.app.setApplicationName("BVC-GESTOR")
+        self.app.setApplicationName("PYME")
         self.app.setApplicationVersion("1.0")
-        self.app.setOrganizationName("BVC-Gestor")
+        self.app.setOrganizationName("PYME")
         
         # Configurar estilo
         self.app.setStyle('Fusion')
@@ -79,9 +77,9 @@ class BVCGestorApp:
         # Configurar fuente
         try:
             # Configurar fuente directamente sin QFontDatabase
-            app_font = QFont("Arial", 10)
+            app_font = QFont("Sans Serif", 10)
             self.app.setFont(app_font)
-            logger.info("✓ Fuente configurada: Arial")
+            logger.info("Fuente configurada: Sans Serif, 10pt")
             
         except Exception as e:
             logger.warning(f"No se pudo configurar fuente: {e}")
@@ -101,17 +99,17 @@ class BVCGestorApp:
                 logger.warning("No se pudo configurar atributo AA_UseHighDpiPixmaps")
                 # Continuar sin este atributo """
         
-        logger.info("✓ Aplicación PyQt6 configurada")
+        logger.info("Aplicación PyQt6 configurada")
     
     def create_main_window(self):
         """Crear ventana principal"""
         logger.info("Creando ventana principal...")
         
         self.main_window = MainWindow(self.app_state)
-        self.main_window.setWindowTitle("PYME - Finanzas de Valores")
+        self.main_window.setWindowTitle("PYME - Gestor de Inversiones")
         self.main_window.resize(1400, 800)
         
-        logger.info("✓ Ventana principal creada")
+        logger.info("Ventana principal creada")
     
     def run(self):
         """Ejecutar aplicación"""
@@ -129,7 +127,7 @@ class BVCGestorApp:
             
             # Mostrar ventana principal
             self.main_window.show()
-            logger.info("✓ Aplicación iniciada exitosamente")
+            logger.info("Aplicación iniciada exitosamente")
             
             # Ejecutar loop principal
             return self.app.exec()
