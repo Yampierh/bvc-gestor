@@ -41,7 +41,6 @@ class BancoDB(Base, AuditMixin):
     nombre: Mapped[str] = mapped_column(String(100), unique=True, nullable=False) # Nombre del banco
     codigo_banco: Mapped[Optional[str]] = mapped_column(String(10), nullable=True) # Código del banco
     pais: Mapped[str] = mapped_column(String(50), default="Venezuela") # País del banco
-    activo: Mapped[bool] = mapped_column(Boolean, default=True) # Estado del banco en el sistema
     
     def __repr__(self):
         return f"<Banco(id='{self.id}', nombre='{self.nombre}')>"
@@ -55,7 +54,6 @@ class CasaBolsaDB(Base, AuditMixin):
     nombre: Mapped[str] = mapped_column(String(100), unique=True, nullable=False) # Nombre de la casa de bolsa
     codigo_casa: Mapped[Optional[str]] = mapped_column(String(10), nullable=True) # Código de la casa de bolsa
     pais: Mapped[str] = mapped_column(String(50), default="Venezuela") # País de la casa de bolsa
-    activo: Mapped[bool] = mapped_column(Boolean, default=True) # Estado en el sistema
     
     def __repr__(self):
         return f"<CasaBolsa(id='{self.id}', nombre='{self.nombre}')>"
@@ -95,7 +93,7 @@ class ClienteDB(Base, AuditMixin):
     movimientos = relationship("MovimientoDB", back_populates="cliente") # Movimientos de cuenta
     banco = relationship("BancoDB") # Banco asociado
     casa_bolsa = relationship("CasaBolsaDB") # Casa de bolsa asociada
-    operaciones = relationship("Operacion", back_populates="cliente") # Operaciones asociadas
+    #operaciones = relationship("Operacion", back_populates="cliente") # Operaciones asociadas
     
     # Índices
     __table_args__ = (
@@ -125,7 +123,6 @@ class ClienteDB(Base, AuditMixin):
             'id': self.id,
             'tipo_persona': self.tipo_persona.value,
             'nombre_completo': self.nombre_completo,
-            'edad': self.edad,
             'telefono_principal': self.telefono,
             'email': self.email,
             'fecha_registro': self.fecha_registro.isoformat(),

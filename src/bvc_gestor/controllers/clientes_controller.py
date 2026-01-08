@@ -1,98 +1,137 @@
-from sqlalchemy.orm import Session
-from ..database.models_sql import ClienteDB as Cliente
-from ..ui.views.clientes_view import ClientesView
-from sqlalchemy.exc import IntegrityError
-from PyQt6.QtWidgets import QTableWidgetItem
+from PyQt6.QtWidgets import QMessageBox, QTableWidgetItem
+from PyQt6.QtCore import Qt
+from ..database.engine import get_database
+from ..database.models_sql import ClienteDB, BancoDB, CuentaDB
 
 class ClientesController:
-    def __init__(self, view: ClientesView):
-        self.view = view
-        # Conectamos los eventos de la UI a nuestras funciones
-        self.view.btn_save.clicked.connect(self.guardar_cliente)
-        self.view.search_bar.textChanged.connect(self.filtrar_clientes)
-        self.view.table.itemSelectionChanged.connect(self.cargar_detalle_cliente)
-        
-        # Cargar datos iniciales
-        self.actualizar_tabla()
+    def __init__(self, main_view):
+        self.view_stack = main_view
+        self.lista = main_view.view_lista
+        self.detalle = main_view.view_detalle
+        self.db_engine = get_database()
 
-    def actualizar_tabla(self, filtro=""):
-        db = SessionLocal()
+        # Conexiones
+        self.lista.btn_nuevo.clicked.connect(self.preparar_nuevo_cliente)
+        self.lista.cliente_seleccionado.connect(self.cargar_y_mostrar_detalle)
+        self.lista.search_bar.textChanged.connect(self.actualizar_tabla)
+        self.detalle.btn_save.clicked.connect(self.guardar_cliente)
+        self.detalle.back_clicked.connect(lambda: self.view_stack.setCurrentIndex(0))
+
+        # Inicialización
+        self.actualizar_tabla()
+        self.precargar_catalogos()
+
+    def preparar_nuevo_cliente(self):
+        """Limpia el formulario y cambia a la vista de detalle"""
+        # 1. Limpiar campos de texto
+        self.detalle.lbl_nombre.setText("Nuevo Cliente")
+        self.detalle.edit_rif.clear()
+        self.detalle.edit_nombre.clear()
+        self.detalle.edit_email.clear()
+        self.detalle.edit_tlf.clear()
+        self.detalle.edit_dir.clear()
+        self.detalle.edit_ciudad.clear()
+        
+        # 2. Resetear combos (seleccionar el primer banco por defecto)
+        if self.detalle.combo_banco.count() > 0:
+            self.detalle.combo_banco.setCurrentIndex(0)
+            
+        # 3. Cambiar la vista al Detalle (Index 1)
+        self.view_stack.setCurrentIndex(1)
+        
+        # Opcional: Poner el foco en el primer campo
+        self.detalle.edit_rif.setFocus()
+
+    def precargar_catalogos(self):
+        """Carga bancos en los combos del detalle"""
+        session = self.db_engine.get_session()
         try:
-            # Idea de busqueda.py: Filtrar por RIF o Nombre
-            query = db.query(Cliente)
+            bancos = session.query(BancoDB).all()
+            self.detalle.combo_banco.clear()
+            for banco in bancos:
+                self.detalle.combo_banco.addItem(banco.nombre, banco.id)
+        finally:
+            session.close()
+
+    def actualizar_tabla(self):
+        filtro = self.lista.search_bar.text()
+        session = self.db_engine.get_session()
+        try:
+            query = session.query(ClienteDB).filter(ClienteDB.activo == True)
             if filtro:
                 query = query.filter(
-                    (Cliente.rif.like(f"%{filtro}%")) | 
-                    (Cliente.nombre_completo.like(f"%{filtro}%"))
+                    (ClienteDB.rif.ilike(f"%{filtro}%")) | 
+                    (ClienteDB.nombre_completo.ilike(f"%{filtro}%"))
                 )
             
             clientes = query.all()
-            
-            self.view.table.setRowCount(0)
-            for cliente in clientes:
-                row = self.view.table.rowCount()
-                self.view.table.insertRow(row)
-                self.view.table.setItem(row, 0, QTableWidgetItem(cliente.rif))
-                self.view.table.setItem(row, 1, QTableWidgetItem(f"{cliente.nombre_principal} {cliente.nombre_secundario or ''}"))
-                self.view.table.setItem(row, 2, QTableWidgetItem(cliente.tipo_persona))
-                self.view.table.setItem(row, 3, QTableWidgetItem("ACTIVO"))
+            self.lista.table.setRowCount(0)
+            for c in clientes:
+                row = self.lista.table.rowCount()
+                self.lista.table.insertRow(row)
+                
+                # Guardamos el ID en el UserRole para recuperarlo luego
+                item_rif = QTableWidgetItem(str(c.rif))
+                item_rif.setData(Qt.ItemDataRole.UserRole, c.id)
+                
+                self.lista.table.setItem(row, 0, item_rif)
+                self.lista.table.setItem(row, 1, QTableWidgetItem(c.nombre_completo))
+                self.lista.table.setItem(row, 2, QTableWidgetItem(c.tipo_persona.value))
+                self.lista.table.setItem(row, 3, QTableWidgetItem(c.email))
         finally:
-            db.close()
+            session.close()
 
-    def filtrar_clientes(self):
-        texto = self.view.search_bar.text()
-        self.actualizar_tabla(texto)
-
-    def cargar_detalle_cliente(self):
-        # Cuando tocas una fila, cargamos los datos de apertura.py en el panel derecho
-        selected_items = self.view.table.selectedItems()
-        if not selected_items:
-            return
-            
-        rif = selected_items[0].text()
-        db = SessionLocal()
-        cliente = db.query(Cliente).filter(Cliente.rif == rif).first()
-        
-        if cliente:
-            self.view.edit_rif.setText(cliente.rif)
-            self.view.edit_nombre.setText(cliente.nombre_completo)
-            self.view.edit_tipo.setText(cliente.tipo_persona)
-            self.view.edit_direccion.setText(cliente.direccion)
-            self.view.edit_email.setText(cliente.email)
-        db.close()
-        
-    def guardar_cliente(self):
-        """Captura los datos de la ficha y los persiste en la DB."""
-        rif = self.view.edit_rif.text().strip().upper()
-        nombre = self.view.edit_nombre.text().strip()
-        tipo = self.view.edit_tipo.text().strip().upper()
-        
-        # Validación de Negocio (Idea de robustez profesional)
-        if not rif or not nombre:
-            print("Error: RIF y Nombre son obligatorios")
-            return
-
-        db = SessionLocal()
+    def cargar_y_mostrar_detalle(self, cliente_id):
+        """Busca el cliente y llena todas las secciones del formulario"""
+        session = self.db_engine.get_session()
         try:
-            # Buscamos si el cliente ya existe para actualizarlo o crearlo
-            cliente = db.query(Cliente).filter(Cliente.rif == rif).first()
+            # Eager loading para traer las cuentas de una vez
+            cliente = session.query(ClienteDB).filter_by(id=cliente_id).first()
+            if not cliente: return
+
+            # Llenar cabecera y datos básicos
+            self.detalle.lbl_nombre.setText(cliente.nombre_completo)
+            self.detalle.edit_rif.setText(cliente.rif)
+            self.detalle.edit_nombre.setText(cliente.nombre_completo)
+            self.detalle.edit_email.setText(cliente.email)
+            self.detalle.edit_tlf.setText(cliente.telefono)
+            self.detalle.edit_dir.setText(cliente.direccion)
+            self.detalle.edit_ciudad.setText(cliente.ciudad)
+            
+            # Seleccionar banco asociado
+            index = self.detalle.combo_banco.findData(cliente.id_banco)
+            self.detalle.combo_banco.setCurrentIndex(index)
+
+            # Mostrar la vista de detalle
+            self.view_stack.setCurrentIndex(1)
+        finally:
+            session.close()
+
+    def guardar_cliente(self):
+        """Lógica para actualizar o crear desde la vista de detalle"""
+        session = self.db_engine.get_session()
+        try:
+            rif = self.detalle.edit_rif.text().strip()
+            # Buscar si existe
+            cliente = session.query(ClienteDB).filter_by(rif=rif).first()
             
             if not cliente:
-                cliente = Cliente(rif=rif)
-                db.add(cliente)
+                cliente = ClienteDB(rif=rif)
+                session.add(cliente)
+
+            # Mapear campos de la UI al Modelo
+            cliente.nombre_completo = self.detalle.edit_nombre.text()
+            cliente.email = self.detalle.edit_email.text()
+            cliente.telefono = self.detalle.edit_tlf.text()
+            cliente.direccion = self.detalle.edit_dir.text()
+            cliente.id_banco = self.detalle.combo_banco.currentData()
             
-            # Asignamos los valores (Inyectando tus campos de apertura.py)
-            cliente.nombre_completo = nombre
-            cliente.tipo_persona = tipo
-            cliente.direccion = self.view.edit_direccion.text().strip()
-            cliente.email = self.view.edit_email.text().strip()
-            
-            db.commit()
-            print(f"Éxito: Cliente {rif} guardado correctamente.")
-            self.actualizar_tabla() # Refresca la lista automáticamente
-            
-        except IntegrityError:
-            db.rollback()
-            print("Error: El RIF ya existe en el sistema.")
+            session.commit()
+            QMessageBox.information(self.detalle, "Éxito", "Información actualizada correctamente.")
+            self.actualizar_tabla()
+            self.view_stack.setCurrentIndex(0) # Volver a la lista
+        except Exception as e:
+            session.rollback()
+            QMessageBox.critical(self.detalle, "Error", f"No se pudo guardar: {str(e)}")
         finally:
-            db.close()
+            session.close()

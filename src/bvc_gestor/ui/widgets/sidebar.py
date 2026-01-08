@@ -1,47 +1,31 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QFrame
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtWidgets import QVBoxLayout, QPushButton, QFrame, QLabel
+from PyQt6.QtCore import Qt, pyqtSignal,QSize
+from PyQt6.QtGui import QIcon
+from pathlib import Path
 
 class SidebarWidget(QFrame):
     pagina_cambiada = pyqtSignal(int)
 
     def __init__(self):
         super().__init__()
-        self.setFixedWidth(70)
-        self.setStyleSheet("""
-            QFrame {
-                background-color: #0d1117;
-                border-right: 1px solid #30363d;
-            }
-            QPushButton {
-                background-color: transparent;
-                color: #8b949e;
-                font-size: 22px;
-                border-radius: 12px;
-                padding: 10px;
-                margin: 5px;
-            }
-            QPushButton:hover {
-                background-color: #21262d;
-                color: #58a6ff;
-            }
-            QPushButton:checked {
-                background-color: #1f6feb;
-                color: white;
-            }
-        """)
+        self.setObjectName("Sidebar")
+        self.setFixedWidth(250)
         self.init_ui()
 
     def init_ui(self):
         layout = QVBoxLayout(self)
-        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        # Botones con iconos (puedes usar emojis por ahora o QIcon más tarde)
-        self.btn_home = self.create_button("🏠", 0, "Dashboard")
-        self.btn_clientes = self.create_button("👤", 1, "Clientes")
-        self.btn_cartera = self.create_button("💼", 2, "Cartera/Inversiones")
-        self.btn_transacciones = self.create_button("📊", 3, "Transacciones")
-        self.btn_config = self.create_button("⚙️", 4, "Configuración")
-
+        # Logo o título de la aplicación
+        self.logo = QLabel("PYME")
+        self.logo.setStyleSheet("font-size: 22px; ;color: white; font-weight: bold; margin: 20px 0;")
+        
+        # Botones de navegación
+        self.btn_home = self.create_button("src/bvc_gestor/assets/icons/home.svg", "Dashboard", 0, "Dashboard")
+        self.btn_clientes = self.create_button("src/bvc_gestor/assets/icons/groups.svg", "Clientes", 1, "Clientes")
+        self.btn_cartera = self.create_button("src/bvc_gestor/assets/icons/wallet.svg", "Cartera", 2, "Cartera")
+        self.btn_transacciones = self.create_button("src/bvc_gestor/assets/icons/order_approve.svg", "Transacciones", 3, "Transacciones")
+        self.btn_config = self.create_button("src/bvc_gestor/assets/icons/setting.svg", "Configuración", 4, "Configuración")
+        layout.addWidget(self.logo)
         layout.addWidget(self.btn_home)
         layout.addWidget(self.btn_clientes)
         layout.addWidget(self.btn_cartera)
@@ -53,10 +37,15 @@ class SidebarWidget(QFrame):
         self.buttons = [self.btn_home, self.btn_clientes, self.btn_cartera, self.btn_transacciones, self.btn_config]
         self.btn_home.setChecked(True)
 
-    def create_button(self, icon, index, tooltip):
-        btn = QPushButton(icon)
+    def create_button(self, icon_path, text, index, tooltip):
+        
+        icon = QIcon(icon_path)
+        btn = QPushButton(text)
+        btn.setIcon(icon)
+        btn.setIconSize(QSize(20, 20))
+        
         btn.setCheckable(True)
-        btn.setAutoExclusive(True) # Solo uno activo a la vez
+        btn.setAutoExclusive(True)
         btn.setToolTip(tooltip)
         btn.clicked.connect(lambda: self.pagina_cambiada.emit(index))
         return btn

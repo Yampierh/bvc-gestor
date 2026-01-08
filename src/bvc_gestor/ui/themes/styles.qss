@@ -1,61 +1,184 @@
-/* Estilo General para todos los LineEdit del programa */
-QLineEdit {
-    background-color: #0d1117;
-    color: #c9d1d9;
-    border: 1px solid #30363d;
-    border-radius: 6px;
+/* --- CONFIGURACIÓN GENERAL --- */
+QMainWindow, QWidget {
+    background-color: #121212;
+    color: #E0E0E0;
+    font-family: 'Segoe UI', 'Sans Serif';
+}
+
+QLabel {
+    background-color: transparent;
+}
+/* Tarjetas Generales */
+#Card, #MetricCard {
+    background-color: #1e1e1e;
+    border-radius: 12px;
+    padding: 0px 15px;
+    border: 1px solid #2d2d2d;
+}
+
+/* Estilos de Métricas */
+#MetricTitle {
+    color: #888888;
+    font-size: 18px;
+}
+
+#MetricValue {
+    color: #ffffff;
+    font-size: 26px;
+    font-weight: bold;
+}
+
+
+/* --- SIDEBAR / MENÚ LATERAL --- */
+QFrame#Sidebar {
+    background-color: #1e1e1e;
+    border-radius: 12px;
+    margin: 20px 0px 20px 0px;
+}
+
+QPushButton {
+    background-color: transparent;
+    color: #B0B0B0;
+    border: none;
+    padding: 12px 20px;
+    text-align: left;
+    font-size: 18px;
+    border-radius: 5px;
+    margin: 2px;
+}
+
+QPushButton:hover {
+    background-color: #2D2D2D;
+    color: #FFFFFF;
+}
+
+QPushButton:checked {
+    background-color: #FF6B00;
+    color: white;
+    font-weight: bold;
+}
+
+/* --- TABLAS (QTableWidget) --- */
+QTableWidget {
+    background-color: #1E1E1E;
+    alternate-background-color: #252525;
+    border: 1px solid #333333;
+    gridline-color: #333333;
+    border-radius: 8px;
+    outline: none;
+}
+
+QTableWidget::item {
     padding: 10px;
-    font-size: 13px;
 }
 
-QLineEdit:focus {
-    border: 1px solid #58a6ff;
-    background-color: #161b22;
+QTableWidget::item:selected {
+    background-color: #3D3D3D;
+    color: #FF6B00;
 }
 
-/* Títulos de sección dentro del formulario */
-QLabel[class="sectionTitle"] {
-    color: #8b949e;
-    font-size: 11px;
+QHeaderView::section {
+    background-color: #2D2D2D;
+    color: #888888;
+    padding: 8px;
+    border: none;
     font-weight: bold;
     text-transform: uppercase;
-    border-bottom: 1px solid #30363d;
-    margin-top: 15px;
-    padding-bottom: 5px;
+    font-size: 11px;
 }
 
-/* El título principal del formulario */
-QLabel#formTitle {
-    color: #58a6ff;
-    font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
-/* El botón de guardar con estilo resaltado */
-QPushButton#btnGuardar {
-    background-color: #238636;
-    color: white;
-    font-weight: bold;
-    padding: 12px;
-    border-radius: 6px;
-    margin-top: 20px;
-}
-
-QPushButton#btnGuardar:hover {
-    background-color: #2ea043;
-}
-
-/* Contenedores */
-#formContainer, #formWidget {
-    background-color: #161b22;
-    border: none;
-}
-
-QComboBox {
-    background-color: #0d1117;
-    color: white;
+/* --- ENTRADAS DE TEXTO (QLineEdit / QComboBox) --- */
+QLineEdit, QComboBox, QTextEdit {
+    background-color: #2D2D2D;
+    border: 1px solid #444444;
+    border-radius: 4px;
     padding: 8px;
-    border: 1px solid #30363d;
-    border-radius: 6px;
+    color: white;
+}
+
+QLineEdit:focus, QComboBox:focus {
+    border: 1px solid #FF6B00;
+}
+
+/* --- BOTONES DE ACCIÓN --- */
+QPushButton#primaryButton {
+    background-color: #FF6B00;
+    color: white;
+    font-weight: bold;
+    border-radius: 4px;
+    padding: 8px 15px;
+}
+
+QPushButton#primaryButton:hover {
+    background-color: #E65A00;
+}
+
+QPushButton#secondaryButton {
+    background-color: #333333;
+    color: white;
+    border-radius: 4px;
+    padding: 8px 15px;
+}
+
+/* --- TABS (QTabWidget) --- */
+QTabWidget::pane {
+    border: 1px solid #333333;
+    background-color: #1E1E1E;
+    border-radius: 5px;
+    top: -1px;
+}
+
+QTabBar::tab {
+    background-color: #2D2D2D;
+    color: #888888;
+    padding: 10px 20px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    margin-right: 2px;
+}
+
+QTabBar::tab:selected {
+    background-color: #1E1E1E;
+    color: #FF6B00;
+    border-bottom: 2px solid #FF6B00;
+}
+
+/* --- TARJETAS Y CONTENEDORES DE DETALLE --- */
+QFrame#HeaderDetail {
+    background-color: #1E1E1E;
+    border-bottom: 1px solid #333333;
+    padding: 10px;
+}
+
+QScrollArea {
+    border: none;
+    background-color: transparent;
+}
+
+#HeaderTitle {
+    font-size: 28px;
+    font-weight: bold;
+    color: white;
+}
+
+#UserName {
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 500;
+}
+
+#UserRole {
+    color: #888888;
+    font-size: 11px;
+}
+
+#IconButton {
+    background: transparent;
+    border: none;
+    padding: 5px;
+}
+
+#IconButton:hover {
+    background: #252525;
+    border-radius: 5px;
 }

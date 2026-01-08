@@ -1,6 +1,6 @@
+# src/bvc_gestor/ui/views/cartera_view.py
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
-                            QTableWidget, QTableWidgetItem, QHeaderView, QFrame)
-from PyQt6.QtCore import Qt
+QTableWidget, QHeaderView, QFrame)
 
 class CarteraView(QWidget):
     def __init__(self):

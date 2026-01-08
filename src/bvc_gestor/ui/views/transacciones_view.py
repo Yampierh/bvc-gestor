@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
-                             QLineEdit, QPushButton, QComboBox, QDateEdit, QFrame)
+                            QLineEdit, QPushButton, QComboBox, QDateEdit, QFrame)
 from PyQt6.QtCore import QDate, Qt
 
 class TransaccionesView(QWidget):
