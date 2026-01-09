@@ -101,7 +101,7 @@ class MainWindow(QMainWindow):
         # 5. Ejecución coordinada
         # Primero cambiamos el título del header
         titulos = {
-            0: "Main Dashboard", 1: "Gestión de Clientes",
+            0: "Main Dashboard", 1: "Gestión de Inversores",
             2: "Cartera de Inversión", 3: "Historial de Transacciones",
             4: "Configuración"
         }
@@ -124,7 +124,7 @@ class MainWindow(QMainWindow):
         # Cada vez que entramos, podemos forzar que inicie en la lista (index 0)
         self.view_clientes.setCurrentIndex(0)
         self.contenedor_paginas.setCurrentIndex(1)
-        self.header.update_title("Gestión de Clientes") 
+        self.header.update_title("Gestión de Inversores") 
         # Opcional: refrescar la tabla al entrar
         self.view_clientes.controller.actualizar_tabla()
 

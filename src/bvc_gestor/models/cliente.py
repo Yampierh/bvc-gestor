@@ -6,103 +6,60 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional, List
 from enum import Enum
-from ..utils.validators_venezuela import validar_cedula, validar_rif, validar_telefono_venezolano
-from ..utils.constants import TipoPersona, TipoDocumento, PerfilRiesgo
-
-class EstadoCivil(str, Enum):
-    SOLTERO = "Soltero/a"
-    CASADO = "Casado/a"
-    DIVORCIADO = "Divorciado/a"
-    VIUDO = "Viudo/a"
+from ..utils.validators_venezuela import validar_rif, validar_telefono, validar_email, validar_nmro_cuenta_bancaria
+from ..utils.constants import TipoInversor, PerfilRiesgo
 
 @dataclass
 class Cliente:
     """Cliente del sistema bursátil venezolano"""
     
     # Información básica
-    id: str  # Cédula o RIF
-    tipo_persona: TipoPersona
-    tipo_documento: TipoDocumento
+    rif_cedula: str
+    tipo_inversor: TipoInversor
     nombre_completo: str
-    fecha_nacimiento: Optional[datetime] = None
-    estado_civil: Optional[EstadoCivil] = None
-    profesion: Optional[str] = None
-    
+
     # Información de contacto
-    telefono_principal: str
-    telefono_secundario: Optional[str] = None
+    telefono: str
     email: str
-    direccion: str
-    ciudad: str
-    estado: str
-    codigo_postal: Optional[str] = None
+    direccion_fiscal: str
+    ciudad_estado: str
+
     
     # Información financiera
     perfil_riesgo: PerfilRiesgo = PerfilRiesgo.MODERADO
-    limite_inversion_bs: float = 0.0
-    limite_inversion_usd: float = 0.0
-    ingresos_mensuales_bs: Optional[float] = None
-    ingresos_mensuales_usd: Optional[float] = None
     
     # Información bancaria
-    banco_principal: Optional[str] = None
+    banco: Optional[str] = None
     numero_cuenta: Optional[str] = None
-    tipo_cuenta: Optional[str] = None  # Ahorros, Corriente
-    
-    # Documentación
-    tiene_patrimonio_declarado: bool = False
-    monto_patrimonio_bs: Optional[float] = None
-    monto_patrimonio_usd: Optional[float] = None
     
     # Metadatos
     fecha_registro: datetime = field(default_factory=datetime.now)
-    fecha_actualizacion: datetime = field(default_factory=datetime.now)
     activo: bool = True
-    notas: Optional[str] = None
     
     # Relaciones (no serializadas en dataclass)
     cuentas: List = field(default_factory=list)
     documentos: List = field(default_factory=list)
     
     def __post_init__(self):
-        """Validar datos después de la inicialización"""
-        self.validar_datos()
         
-    def validar_datos(self):
-        """Validar datos del cliente según normas venezolanas"""
-        # Validar identificación
-        if self.tipo_persona == TipoPersona.NATURAL:
-            if not validar_cedula(self.id):
-                raise ValueError(f"Cédula inválida: {self.id}")
-        else:  # Jurídico
-            if not validar_rif(self.id):
-                raise ValueError(f"RIF inválido: {self.id}")
-        
+        # Validar RIF/Cédula
+        if not validar_rif(self.rif_cedula):
+            raise ValueError(f"RIF/Cédula inválido: {self.rif_cedula}")
         # Validar teléfono
-        if not validar_telefono_venezolano(self.telefono_principal):
-            raise ValueError(f"Teléfono inválido: {self.telefono_principal}")
+        if not validar_telefono(self.telefono):
+            raise ValueError(f"Teléfono inválido: {self.telefono}")
         
         # Validar email básico
-        if '@' not in self.email or '.' not in self.email:
+        if not validar_email(self.email):
             raise ValueError(f"Email inválido: {self.email}")
-    
-    def calcular_edad(self) -> Optional[int]:
-        """Calcular edad del cliente"""
-        if not self.fecha_nacimiento:
-            return None
-        hoy = datetime.now()
-        edad = hoy.year - self.fecha_nacimiento.year
-        if (hoy.month, hoy.day) < (self.fecha_nacimiento.month, self.fecha_nacimiento.day):
-            edad -= 1
-        return edad
-    
+        
     def obtener_resumen(self) -> dict:
         """Obtener resumen del cliente"""
         return {
-            'id': self.id,
+            'rif_cedula': self.rif_cedula,
             'nombre': self.nombre_completo,
-            'tipo': self.tipo_persona.value,
-            'telefono': self.telefono_principal,
+            'tipo_inversor': self.tipo_inversor.value,
+            'telefono': self.telefono,
             'email': self.email,
             'perfil_riesgo': self.perfil_riesgo.value,
             'fecha_registro': self.fecha_registro.strftime('%Y-%m-%d'),
@@ -112,35 +69,18 @@ class Cliente:
     def to_dict(self) -> dict:
         """Convertir a diccionario para serialización"""
         data = {
-            'id': self.id,
-            'tipo_persona': self.tipo_persona.value,
-            'tipo_documento': self.tipo_documento.value,
+            'rif_cedula': self.rif_cedula,
+            'tipo_inversor': self.tipo_inversor.value,
             'nombre_completo': self.nombre_completo,
-            'fecha_nacimiento': self.fecha_nacimiento.isoformat() if self.fecha_nacimiento else None,
-            'estado_civil': self.estado_civil.value if self.estado_civil else None,
-            'profesion': self.profesion,
-            'telefono_principal': self.telefono_principal,
-            'telefono_secundario': self.telefono_secundario,
+            'telefono': self.telefono,
             'email': self.email,
-            'direccion': self.direccion,
-            'ciudad': self.ciudad,
-            'estado': self.estado,
-            'codigo_postal': self.codigo_postal,
+            'direccion_fiscal': self.direccion_fiscal,
+            'ciudad_estado': self.ciudad_estado,
             'perfil_riesgo': self.perfil_riesgo.value,
-            'limite_inversion_bs': self.limite_inversion_bs,
-            'limite_inversion_usd': self.limite_inversion_usd,
-            'ingresos_mensuales_bs': self.ingresos_mensuales_bs,
-            'ingresos_mensuales_usd': self.ingresos_mensuales_usd,
-            'banco_principal': self.banco_principal,
+            'banco': self.banco,
             'numero_cuenta': self.numero_cuenta,
-            'tipo_cuenta': self.tipo_cuenta,
-            'tiene_patrimonio_declarado': self.tiene_patrimonio_declarado,
-            'monto_patrimonio_bs': self.monto_patrimonio_bs,
-            'monto_patrimonio_usd': self.monto_patrimonio_usd,
             'fecha_registro': self.fecha_registro.isoformat(),
-            'fecha_actualizacion': self.fecha_actualizacion.isoformat(),
             'activo': self.activo,
-            'notas': self.notas
         }
         return data
     
@@ -148,19 +88,9 @@ class Cliente:
     def from_dict(cls, data: dict) -> 'Cliente':
         """Crear cliente desde diccionario"""
         # Convertir strings a enums
-        if 'tipo_persona' in data:
-            data['tipo_persona'] = TipoPersona(data['tipo_persona'])
-        if 'tipo_documento' in data:
-            data['tipo_documento'] = TipoDocumento(data['tipo_documento'])
+        if 'tipo_inversor' in data:
+            data['tipo_inversor'] = TipoInversor(data['tipo_inversor'])
         if 'perfil_riesgo' in data:
             data['perfil_riesgo'] = PerfilRiesgo(data['perfil_riesgo'])
-        if 'estado_civil' in data and data['estado_civil']:
-            data['estado_civil'] = EstadoCivil(data['estado_civil'])
-        
-        # Convertir strings a datetime
-        date_fields = ['fecha_nacimiento', 'fecha_registro', 'fecha_actualizacion']
-        for field in date_fields:
-            if field in data and data[field]:
-                data[field] = datetime.fromisoformat(data[field])
         
         return cls(**data)

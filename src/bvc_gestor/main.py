@@ -85,20 +85,6 @@ class BVCGestorApp:
             logger.warning(f"No se pudo configurar fuente: {e}")
             # Usar fuente por defecto
         
-        """# Configurar atributos de la aplicación
-        try:
-            # En PyQt6, el atributo se llama diferente
-            # PyQt6: Qt.ApplicationAttribute.AA_UseHighDpiPixmaps
-            # Pero verifiquemos qué atributos existen realmente
-            self.app.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps)
-        except AttributeError:
-            try:
-                # Intentar con el nombre de PyQt5 por compatibilidad
-                self.app.setAttribute(Qt.AA_UseHighDpiPixmaps)
-            except AttributeError:
-                logger.warning("No se pudo configurar atributo AA_UseHighDpiPixmaps")
-                # Continuar sin este atributo """
-        
         logger.info("Aplicación PyQt6 configurada")
     
     def create_main_window(self):

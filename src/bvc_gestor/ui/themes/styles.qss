@@ -1,5 +1,5 @@
 /* --- CONFIGURACIÓN GENERAL --- */
-QMainWindow, QWidget {
+QMainWindow, QWidget, QDialog{
     background-color: #121212;
     color: #E0E0E0;
     font-family: 'Segoe UI', 'Sans Serif';
@@ -8,6 +8,19 @@ QMainWindow, QWidget {
 QLabel {
     background-color: transparent;
 }
+
+/* --- BARRA SUPERIOR --- */
+QFrame#toolbar {
+    background-color: #1e1e1e;
+    border-bottom: 1px solid #333333;
+    border-radius: 12px;
+    padding: 0px;
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+
+
 /* Tarjetas Generales */
 #Card, #MetricCard {
     background-color: #1e1e1e;
@@ -58,7 +71,7 @@ QPushButton:checked {
     font-weight: bold;
 }
 
-/* --- TABLAS (QTableWidget) --- */
+/* --- TABLAS ( QTableWidget ) --- */
 QTableWidget {
     background-color: #1E1E1E;
     alternate-background-color: #252525;
@@ -87,7 +100,7 @@ QHeaderView::section {
     font-size: 11px;
 }
 
-/* --- ENTRADAS DE TEXTO (QLineEdit / QComboBox) --- */
+/* --- ENTRADAS DE TEXTO ( QLineEdit / QComboBox / QTextEdit ) --- */
 QLineEdit, QComboBox, QTextEdit {
     background-color: #2D2D2D;
     border: 1px solid #444444;
@@ -96,7 +109,7 @@ QLineEdit, QComboBox, QTextEdit {
     color: white;
 }
 
-QLineEdit:focus, QComboBox:focus {
+QLineEdit:focus, QComboBox:focus, QTextEdit:focus {
     border: 1px solid #FF6B00;
 }
 

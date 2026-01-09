@@ -24,7 +24,7 @@ class SidebarWidget(QFrame):
         self.btn_clientes = self.create_button("src/bvc_gestor/assets/icons/groups.svg", "Clientes", 1, "Clientes")
         self.btn_cartera = self.create_button("src/bvc_gestor/assets/icons/wallet.svg", "Cartera", 2, "Cartera")
         self.btn_transacciones = self.create_button("src/bvc_gestor/assets/icons/order_approve.svg", "Transacciones", 3, "Transacciones")
-        self.btn_config = self.create_button("src/bvc_gestor/assets/icons/setting.svg", "Configuración", 4, "Configuración")
+        self.btn_config = self.create_button("src/bvc_gestor/assets/icons/settings.svg", "Configuración", 4, "Configuración")
         layout.addWidget(self.logo)
         layout.addWidget(self.btn_home)
         layout.addWidget(self.btn_clientes)
@@ -42,7 +42,7 @@ class SidebarWidget(QFrame):
         icon = QIcon(icon_path)
         btn = QPushButton(text)
         btn.setIcon(icon)
-        btn.setIconSize(QSize(20, 20))
+        btn.setIconSize(QSize(24, 24))
         
         btn.setCheckable(True)
         btn.setAutoExclusive(True)

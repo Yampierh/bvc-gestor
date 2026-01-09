@@ -2,7 +2,7 @@
 from decimal import Decimal
 import logging
 from sqlalchemy.orm import Session
-from ..database.models_sql import OrdenDB, CuentaDB
+from ..database.models_sql import OrdenDB, CuentaBursatilDB
 from ..database.repositories import RepositoryFactory, CuentaRepository
 from ..utils.calculos_financieros import calcular_comision_bvc, calcular_monto_total_orden
 from ..utils.constants import EstadoOrden, Moneda, TipoOrden, TipoOperacion

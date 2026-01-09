@@ -3,47 +3,23 @@
 Validadores específicos para datos venezolanos
 """
 import re
-from datetime import datetime
-from typing import Optional, Tuple
-from .constants import TipoPersona, TipoDocumento
+from typing import Optional
 
-def validar_cedula(cedula: str) -> bool:
-    """
-    Validar cédula venezolana (V-12345678 o E-12345678)
-    Formato: [V|E]-[7-8 dígitos]
-    """
-    if not cedula:
-        return False
-    
-    patron = r'^[VEPvep]-?\d{7,8}$'
-    if not re.match(patron, cedula):
-        return False
-    
-    # Limpiar guión si existe
-    cedula_limpia = cedula.replace('-', '')
-    
-    # Verificar que no sea una cédula de prueba común
-    cedulas_invalidas = ['V-11111111', 'V-22222222', 'V-12345678', 'E-11111111']
-    if cedula in cedulas_invalidas or cedula_limpia in cedulas_invalidas:
-        return False
-    
-    return True
 
-def validar_rif(rif: str) -> bool:
+def validar_rif(rif_cedula: str) -> bool:
     """
     Validar RIF venezolano (J-12345678-9)
     Formato: [J|G]-[8 dígitos]-[1 dígito verificador]
     """
-    if not rif:
+    if not rif_cedula:
         return False
     
     patron = r'^[JGjg]-?\d{8}-?\d$'
-    if not re.match(patron, rif):
+    if not re.match(patron, rif_cedula):
         return False
     
     # Limpiar guiones
-    rif_limpio = rif.replace('-', '')
-    
+    rif_limpio = rif_cedula.replace('-', '')
     # Verificar dígito verificador (algoritmo simple)
     if len(rif_limpio) == 10:
         tipo = rif_limpio[0].upper()
@@ -63,7 +39,17 @@ def validar_rif(rif: str) -> bool:
     
     return True  # Si no tiene 10 caracteres, al menos pasa validación básica
 
-def validar_telefono_venezolano(telefono: str) -> bool:
+def validar_email(email: str) -> bool:
+    """
+    Validar formato de correo electrónico
+    """
+    if not email:
+        return False
+    
+    patron = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(patron, email))
+
+def validar_telefono(telefono: str) -> bool:
     """
     Validar número de teléfono venezolano
     Formatos aceptados: 0414-1234567, 04141234567, 212-1234567, +584141234567
@@ -115,66 +101,24 @@ def formatear_telefono(telefono: str) -> str:
     
     return telefono  # Devolver original si no coincide
 
-def validar_fecha_venezolana(fecha_str: str) -> Tuple[bool, Optional[datetime]]:
+def validar_nmro_cuenta_bancaria(cuenta: str) -> bool:
     """
-    Validar fecha en formato venezolano (DD/MM/YYYY)
+    Validar número de cuenta bancaria venezolano (20 dígitos)
     """
-    try:
-        fecha = datetime.strptime(fecha_str, '%d/%m/%Y')
-        
-        # Verificar que no sea futura (para fechas de nacimiento)
-        if fecha > datetime.now():
-            return False, None
-        
-        # Verificar edad mínima (18 años para clientes)
-        edad = datetime.now().year - fecha.year
-        if edad < 18:
-            return False, None
-            
-        return True, fecha
-    except ValueError:
-        return False, None
+    if not cuenta:
+        return False
+    
+    patron = r'^\d{20}$'
+    return bool(re.match(patron, cuenta))
 
-def validar_monto_bs(monto: float) -> bool:
+def formatear_nmro_cuenta_bancaria(cuenta: str) -> str:
     """
-    Validar monto en bolívares (no negativo, máximo 10^15)
+    Formatear número de cuenta bancaria a bloques de 4 dígitos
+    Ejemplo: 01234567890123456789 -> 0123 4567 8901 2345 6789
     """
-    return 0 <= monto <= 10**15
+    if not cuenta or len(cuenta) != 20 or not cuenta.isdigit():
+        return cuenta
+    
+    bloques = [cuenta[i:i+4] for i in range(0, 20, 4)]
+    return ' '.join(bloques)
 
-def validar_monto_usd(monto: float) -> bool:
-    """
-    Validar monto en dólares (no negativo, máximo 10^9)
-    """
-    return 0 <= monto <= 10**9
-
-def extraer_tipo_identificacion(identificacion: str) -> Optional[str]:
-    """
-    Extraer tipo de identificación de la cadena
-    """
-    if not identificacion:
-        return None
-    
-    identificacion = identificacion.upper()
-    
-    if identificacion.startswith('V') or identificacion.startswith('E'):
-        return TipoDocumento.CEDULA.value
-    elif identificacion.startswith('J') or identificacion.startswith('G'):
-        return TipoDocumento.RIF.value
-    elif identificacion.startswith('P'):
-        return TipoDocumento.PASAPORTE.value
-    
-    return None
-
-def get_tipo_persona_from_id(identificacion: str) -> TipoPersona:
-    """
-    Determinar tipo de persona basado en la identificación
-    """
-    if not identificacion:
-        return TipoPersona.NATURAL
-    
-    identificacion = identificacion.upper()
-    
-    if identificacion.startswith('J') or identificacion.startswith('G'):
-        return TipoPersona.JURIDICA
-    else:
-        return TipoPersona.NATURAL

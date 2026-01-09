@@ -18,5 +18,3 @@ class ClientesModule(QStackedWidget):
         
         # 3. Instanciar el Controlador (Él maneja la lógica de intercambio)
         self.controller = ClientesController(self)
-        
-        

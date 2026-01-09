@@ -14,8 +14,9 @@ class ClientesListView(QWidget):
 
         # Barra Superior
         toolbar = QHBoxLayout()
+        toolbar.setContentsMargins(0, 0, 0, 0)
         self.search_bar = QLineEdit()
-        self.search_bar.setPlaceholderText("🔍 Buscar por RIF o Razón Social...")
+        self.search_bar.setPlaceholderText("Buscar por RIF o Razón Social...")
         self.search_bar.setObjectName("searchBar")
         
         self.btn_nuevo = QPushButton("+ Nuevo Cliente")
@@ -28,8 +29,8 @@ class ClientesListView(QWidget):
         layout.addLayout(toolbar)
 
         # Tabla de Clientes
-        self.table = QTableWidget(0, 4)
-        self.table.setHorizontalHeaderLabels(["RIF", "Nombre / Razón Social", "Tipo", "Estado"])
+        self.table = QTableWidget(0, 3)
+        self.table.setHorizontalHeaderLabels(["RIF", "Nombre / Razón Social", "Estado"])
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.verticalHeader().setVisible(False)

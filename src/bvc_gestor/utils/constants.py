@@ -36,14 +36,9 @@ class Moneda(str, Enum):
     DOLAR = "USD"
     EURO = "EUR"
 
-class TipoPersona(str, Enum):
+class TipoInversor(str, Enum):
     NATURAL = "Natural"
     JURIDICA = "Jurídica"
-
-class TipoDocumento(str, Enum):
-    CEDULA = "Cédula"
-    RIF = "RIF"
-    PASAPORTE = "Pasaporte"
 
 class PerfilRiesgo(str, Enum):
     CONSERVADOR = "Conservador"
@@ -76,5 +71,4 @@ HORA_CIERRE = "14:00"
 # Valores por defecto
 DEFAULT_MONEDA = Moneda.BOLIVAR
 DEFAULT_PERFIL_RIESGO = PerfilRiesgo.MODERADO
-DEFAULT_TIPO_PERSONA = TipoPersona.NATURAL
-DEFAULT_TIPO_DOCUMENTO = TipoDocumento.CEDULA
+DEFAULT_TIPO_INVERSOR = TipoInversor.NATURAL

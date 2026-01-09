@@ -101,6 +101,8 @@ class DatabaseEngine:
         try:
             Base.metadata.create_all(bind=self._engine)
             logger.info("Tablas creadas exitosamente")
+            
+            #self.seed_defaults()
         except Exception as e:
             logger.error(f"Error creando tablas: {str(e)}")
             raise

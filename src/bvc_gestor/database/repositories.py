@@ -4,15 +4,11 @@ Repositorios para acceso a datos con SQLAlchemy
 """
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_, desc, asc, func, text
+from sqlalchemy import or_, desc, func
 from sqlalchemy.exc import SQLAlchemyError
-import logging
 
 from .models_sql import (
-    ClienteDB, CuentaDB, ActivoDB, OrdenDB,
-    TransaccionDB, PortafolioItemDB, MovimientoDB,
-    DocumentoDB, ConfiguracionDB
-)
+    ClienteDB, CuentaBursatilDB, ActivoDB, OrdenDB)
 from ..utils.logger import logger
 
 class BaseRepository:
@@ -120,7 +116,7 @@ class ClienteRepository(BaseRepository):
     def get_active_clients(self) -> List[ClienteDB]:
         """Obtener clientes activos"""
         try:
-            return self.db.query(ClienteDB).filter(ClienteDB.activo == True).all()
+            return self.db.query(ClienteDB).filter(ClienteDB.estatus == True).all()
         except SQLAlchemyError as e:
             logger.error(f"Error obteniendo clientes activos: {str(e)}")
             return []
@@ -158,28 +154,28 @@ class CuentaRepository(BaseRepository):
     """Repositorio específico para Cuentas"""
     
     def __init__(self, db: Session):
-        super().__init__(db, CuentaDB)
+        super().__init__(db, CuentaBursatilDB)
     
-    def get_by_cliente(self, cliente_id: str) -> List[CuentaDB]:
+    def get_by_cliente(self, cliente_id: str) -> List[CuentaBursatilDB]:
         """Obtener cuentas de un cliente"""
         try:
-            return self.db.query(CuentaDB).filter(CuentaDB.cliente_id == cliente_id).all()
+            return self.db.query(CuentaBursatilDB).filter(CuentaBursatilDB.cliente_id == cliente_id).all()
         except SQLAlchemyError as e:
             logger.error(f"Error obteniendo cuentas para cliente {cliente_id}: {str(e)}")
             return []
     
-    def get_by_numero(self, numero_cuenta: str) -> Optional[CuentaDB]:
+    def get_by_numero(self, numero_cuenta: str) -> Optional[CuentaBursatilDB]:
         """Obtener cuenta por número"""
         try:
-            return self.db.query(CuentaDB).filter(CuentaDB.numero_cuenta == numero_cuenta).first()
+            return self.db.query(CuentaBursatilDB).filter(CuentaBursatilDB.numero_cuenta == numero_cuenta).first()
         except SQLAlchemyError as e:
             logger.error(f"Error obteniendo cuenta {numero_cuenta}: {str(e)}")
             return None
     
-    def get_active_accounts(self) -> List[CuentaDB]:
+    def get_active_accounts(self) -> List[CuentaBursatilDB]:
         """Obtener cuentas activas"""
         try:
-            return self.db.query(CuentaDB).filter(CuentaDB.estado == 'Activa').all()
+            return self.db.query(CuentaBursatilDB).filter(CuentaBursatilDB.estatus == 'Activa').all()
         except SQLAlchemyError as e:
             logger.error(f"Error obteniendo cuentas activas: {str(e)}")
             return []
@@ -349,14 +345,14 @@ class RepositoryFactory:
 def get_model_class(model_type: str):
     """Obtener clase de modelo por tipo"""
     from .models_sql import (
-        ClienteDB, CuentaDB, ActivoDB, OrdenDB,
+        ClienteDB, CuentaBursatilDB, ActivoDB, OrdenDB,
         TransaccionDB, PortafolioItemDB, MovimientoDB,
         DocumentoDB, ConfiguracionDB
     )
     
     model_map = {
         'cliente': ClienteDB,
-        'cuenta': CuentaDB,
+        'cuenta': CuentaBursatilDB,
         'activo': ActivoDB,
         'orden': OrdenDB,
         'transaccion': TransaccionDB,

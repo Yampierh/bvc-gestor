@@ -14,6 +14,7 @@ class MetricCard(QFrame):
         main_layout = QHBoxLayout(self)
         main_layout.setContentsMargins(15, 15, 15, 15)
         main_layout.setSpacing(15)
+        main_layout.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter)
 
         # 2. Configuración del Icono
         self.icon_lbl = QLabel()
@@ -23,7 +24,7 @@ class MetricCard(QFrame):
         
         # 3. Layout para los Textos (Vertical: Título / Valor)
         text_layout = QVBoxLayout()
-        text_layout.setSpacing(2) # Espacio estrecho entre título y valor
+        text_layout.setSpacing(1) # Espacio estrecho entre título y valor
         
         self.title_lbl = QLabel(title)
         self.title_lbl.setObjectName("MetricTitle")
@@ -36,7 +37,7 @@ class MetricCard(QFrame):
 
         # 4. Ensamblar la estructura
         main_layout.addWidget(self.icon_lbl)
-        main_layout.addLayout(text_layout)
+        main_layout.addLayout(text_layout) 
         main_layout.addStretch() # Empuja todo a la izquierda para que no se separe al crecer
 
 class DashboardView(QWidget):

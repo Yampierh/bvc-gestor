@@ -14,13 +14,12 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from datetime import datetime, date
 from decimal import Decimal
 from typing import Optional
-import re
 import logging
 
 from .engine import Base
-from ..utils.validators_venezuela import validar_telefono_venezolano
+from ..utils.validators_venezuela import validar_telefono, validar_rif, validar_nmro_cuenta_bancaria, validar_email
 from ..utils.constants import (
-    TipoPersona, EstadoOrden, TipoOrden, TipoOperacion, Moneda
+    TipoInversor, EstadoOrden, TipoOrden
 )
 
 logger = logging.getLogger(__name__)
@@ -29,8 +28,8 @@ class AuditMixin:
     """Añade fechas de auditoría y estado a todas las tablas de forma automática"""
     fecha_registro: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     fecha_actualizacion: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
-    # El campo 'activo' debe estar aquí para que todas las tablas tengan soft-delete
-    activo: Mapped[bool] = mapped_column(Boolean, default=True)
+    # El campo 'estatus' debe estar aquí para que todas las tablas tengan soft-delete
+    estatus: Mapped[bool] = mapped_column(Boolean, default=True)
 
 class BancoDB(Base, AuditMixin):
     """Modelo para bancos venezolanos"""
@@ -39,11 +38,7 @@ class BancoDB(Base, AuditMixin):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True) # ID interno
     rif: Mapped[str] = mapped_column(String(15), unique=True, nullable=False)  # RIF del banco
     nombre: Mapped[str] = mapped_column(String(100), unique=True, nullable=False) # Nombre del banco
-    codigo_banco: Mapped[Optional[str]] = mapped_column(String(10), nullable=True) # Código del banco
-    pais: Mapped[str] = mapped_column(String(50), default="Venezuela") # País del banco
-    
-    def __repr__(self):
-        return f"<Banco(id='{self.id}', nombre='{self.nombre}')>"
+    codigo: Mapped[str] = mapped_column(String(4), unique=True, nullable=False) # Código del banco
 
 class CasaBolsaDB(Base, AuditMixin):
     """Modelo para casas de bolsa venezolanas"""
@@ -52,11 +47,8 @@ class CasaBolsaDB(Base, AuditMixin):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True) # ID interno
     rif: Mapped[str] = mapped_column(String(15), unique=True, nullable=False)  # RIF de la casa de bolsa
     nombre: Mapped[str] = mapped_column(String(100), unique=True, nullable=False) # Nombre de la casa de bolsa
-    codigo_casa: Mapped[Optional[str]] = mapped_column(String(10), nullable=True) # Código de la casa de bolsa
-    pais: Mapped[str] = mapped_column(String(50), default="Venezuela") # País de la casa de bolsa
-    
-    def __repr__(self):
-        return f"<CasaBolsa(id='{self.id}', nombre='{self.nombre}')>"
+    sector: Mapped[str] = mapped_column(String(100), nullable=True) # Sector económico
+    tipo_entidad: Mapped[str] = mapped_column(String(50), nullable=False) # Tipo de entidad: Casa de Bolsa, CVV, etc.
 
 class ClienteDB(Base, AuditMixin):
     """Modelo SQLAlchemy para Clientes venezolanos"""
@@ -64,55 +56,49 @@ class ClienteDB(Base, AuditMixin):
     
     # Identificación
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True) # ID interno
-    rif: Mapped[str] = mapped_column(String(20), unique=True, index=True, nullable=False) # RIF
-    tipo_persona: Mapped[TipoPersona] = mapped_column(SQLAlchemyEnum(TipoPersona), nullable=False) # Natural o Jurídica
     nombre_completo: Mapped[str] = mapped_column(String(200), nullable=False) # Nombre completo o razón social
+    tipo_inversor: Mapped[TipoInversor] = mapped_column(SQLAlchemyEnum(TipoInversor), nullable=False) # Natural o Jurídica
+    rif_cedula: Mapped[str] = mapped_column(String(20), unique=True, index=True, nullable=False) # RIF o Cédula
     
-    # Información de contacto
+    #Control de Vigencia
+    fecha_vencimiento_rif: Mapped[Optional[date]] = mapped_column(Date, nullable=True) # Fecha de vencimiento del RIF
+    
+    # Perfil de Inversión
+    perfil_riesgo: Mapped[str] = mapped_column(String(50), default="Moderado") # Conservador, Moderado, Agresivo
+    
+    # Contacto
     telefono: Mapped[str] = mapped_column(String(20), nullable=False) # Teléfono principal
-    telefono_secundario: Mapped[Optional[str]] = mapped_column(String(20), nullable=True) # Teléfono secundario
     email: Mapped[str] = mapped_column(String(100), nullable=False) # Email principal
-    direccion: Mapped[str] = mapped_column(Text, nullable=False) # Dirección completa
-    ciudad: Mapped[str] = mapped_column(String(100), nullable=False) # Ciudad
-    estado: Mapped[str] = mapped_column(String(100), nullable=False) # Estado o provincia
-    codigo_postal: Mapped[Optional[str]] = mapped_column(String(10), nullable=True) # Código postal
-    
-    # Información financiera
-    id_banco: Mapped[Optional[int]] = mapped_column(ForeignKey('bancos.id')) # Banco asociado por defecto
-    tipo_cuenta: Mapped[Optional[str]] = mapped_column(String(30), nullable=True)  # Ahorros, Corriente
-    numero_cuenta: Mapped[Optional[str]] = mapped_column(String(50), nullable=True) # Número de cuenta bancaria
-    id_casa_bolsa: Mapped[Optional[int]] = mapped_column(ForeignKey('casas_bolsa.id')) # Casa de bolsa asociada por defecto
-    
-    fecha_cierre: Mapped[Optional[date]] = mapped_column(Date, nullable=True) # Fecha de cierre del cliente
+    direccion_fiscal: Mapped[str] = mapped_column(Text, nullable=False) # Dirección fiscal completa
+    ciudad_estado: Mapped[str] = mapped_column(String(100), nullable=False) # Ciudad y estado de residencia
     
     # Relaciones
-    cuentas = relationship("CuentaDB", back_populates="cliente", cascade="all, delete-orphan") # Cuentas bursátiles
-    documentos = relationship("DocumentoDB", back_populates="cliente", cascade="all, delete-orphan") # Documentos asociados
-    ordenes = relationship("OrdenDB", back_populates="cliente") # Órdenes bursátiles
-    transacciones = relationship("TransaccionDB", back_populates="cliente") # Transacciones ejecutadas
-    movimientos = relationship("MovimientoDB", back_populates="cliente") # Movimientos de cuenta
-    banco = relationship("BancoDB") # Banco asociado
-    casa_bolsa = relationship("CasaBolsaDB") # Casa de bolsa asociada
-    #operaciones = relationship("Operacion", back_populates="cliente") # Operaciones asociadas
+    cuentas_bancarias = relationship("CuentaBancariaDB", back_populates="cliente")
+    cuentas = relationship("CuentaBursatilDB", back_populates="cliente")
+    documentos = relationship("DocumentoDB", back_populates="cliente")
     
     # Índices
     __table_args__ = (
         Index('idx_cliente_nombre', 'nombre_completo'), # Índice para búsquedas por nombre
-        Index('idx_cliente_email', 'email'), # Índice para búsquedas por email
-        Index('idx_cliente_tipo_persona', 'tipo_persona'), # Índice para búsquedas por tipo de persona
+        Index('idx_cliente_rif', 'rif_cedula'), # Índice para búsquedas por RIF o cédula
+        Index('idx_cliente_tipo_inversor', 'tipo_inversor'), # Índice para búsquedas por tipo de inversor
     )
+
+    def validar_rif(self, key, rif_cedula): # Validar RIF
+        if not validar_rif(rif_cedula):
+            raise ValueError(f"RIF/Cédula inválido: {rif_cedula}")
+        return rif_cedula
     
     @validates('telefono') # Validar teléfono principal
     def validate_telefono_principal(self, key, telefono):
-        """Validar teléfono venezolano"""
-        if not validar_telefono_venezolano(telefono):
+        if not validar_telefono(telefono):
             raise ValueError(f"Teléfono inválido: {telefono}")
         return telefono
     
     @validates('email') # Validar formato de email
     def validate_email(self, key, email):
         """Validar formato de email"""
-        if not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+        if not validar_email(email):
             raise ValueError(f"Email inválido: {email}")
         return email
     
@@ -121,173 +107,144 @@ class ClienteDB(Base, AuditMixin):
         """Convertir a diccionario"""
         return {
             'id': self.id,
-            'tipo_persona': self.tipo_persona.value,
+            'tipo_inversor': self.tipo_inversor.value,
+            'rif_cedula': self.rif_cedula,
+            'fecha_vencimiento_rif': self.fecha_vencimiento_rif,
+            'perfil_riesgo': self.perfil_riesgo,
+            'direccion_fiscal': self.direccion_fiscal,
+            'ciudad_estado': self.ciudad_estado,
             'nombre_completo': self.nombre_completo,
-            'telefono_principal': self.telefono,
+            'telefono': self.telefono,
             'email': self.email,
             'fecha_registro': self.fecha_registro.isoformat(),
-            'activo': self.activo
+            'estatus': self.estatus
         }
     
     def __repr__(self):
         return f"<Cliente(id='{self.id}', nombre='{self.nombre_completo}')>"
 
-class CuentaDB(Base, AuditMixin):
-    """Modelo para cuentas bursátiles de clientes"""
-    __tablename__ = "cuentas"
+class CuentaBancariaDB(Base, AuditMixin):
+    """Cuentas bancarias asociadas a clientes"""
+    __tablename__ = "cuentas_bancarias"
     
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True) # ID interno
-    cliente_id: Mapped[Integer] = mapped_column(Integer, ForeignKey('clientes.id', ondelete='CASCADE'), nullable=False) # Cliente propietario
-    numero_cuenta: Mapped[str] = mapped_column(String(50), unique=True, nullable=False) # Número único de cuenta
-    tipo_cuenta: Mapped[str] = mapped_column(String(30), nullable=False)  # Individual, Conjunta, Corporativa
-    moneda_base: Mapped[str] = mapped_column(String(3), default=Moneda.DOLAR.value)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    cliente_id: Mapped[int] = mapped_column(ForeignKey("clientes.id"), nullable=False)
+    banco_id: Mapped[int] = mapped_column(ForeignKey("bancos.id"), nullable=False)
     
-    # Saldos
-    saldo_disponible_bs: Mapped[Decimal] = mapped_column(DECIMAL(20, 8), default=0.00) # Saldo disponible en Bs
-    saldo_disponible_usd: Mapped[Decimal] = mapped_column(DECIMAL(20, 8), default=0.00) # Saldo disponible en USD
-    saldo_bloqueado_bs: Mapped[Decimal] = mapped_column(DECIMAL(20, 8), default=0.00) # Saldo bloqueado en Bs
-    saldo_bloqueado_usd: Mapped[Decimal] = mapped_column(DECIMAL(20, 8), default=0.00) # Saldo bloqueado en USD
-    
-    # Estado
-    estado: Mapped[str] = mapped_column(String(20), default='Activa')  # Activa, Suspendida, Cerrada
-    fecha_apertura: Mapped[datetime] = mapped_column(DateTime, default=func.now()) # Fecha de apertura
-    fecha_cierre: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True) # Fecha de cierre
-    
-    # Configuración
-    permite_margen: Mapped[bool] = mapped_column(Boolean, default=False) # Si permite operaciones con margen
-    limite_margen_bs: Mapped[Decimal] = mapped_column(DECIMAL(20, 8), default=0.00) # Límite de margen en Bs
-    limite_margen_usd: Mapped[Decimal] = mapped_column(DECIMAL(20, 8), default=0.00) # Límite de margen en USD
-    
-    # Metadatos
-    notas: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    numero_cuenta: Mapped[str] = mapped_column(String(20), unique=True, nullable=False) # Número de cuenta bancaria
+    tipo_cuenta: Mapped[str] = mapped_column(String(30), default="Ahorros") # Ahorros, Corriente, Nómina
     
     # Relaciones
-    cliente = relationship("ClienteDB", back_populates="cuentas") # Cliente propietario
-    ordenes = relationship("OrdenDB", back_populates="cuenta") # Órdenes asociadas
-    transacciones = relationship("TransaccionDB", back_populates="cuenta") # Transacciones asociadas
-    movimientos = relationship("MovimientoDB", back_populates="cuenta") # Movimientos de cuenta
-    portafolio_items = relationship("PortafolioItemDB", back_populates="cuenta") # Items en portafolio
+    cliente = relationship("ClienteDB", back_populates="cuentas_bancarias")
+    banco = relationship("BancoDB")
+    
+    @validates('numero_cuenta') # Validar número de cuenta bancaria
+    def validate_numero_cuenta(self, key, numero_cuenta):
+        if not validar_nmro_cuenta_bancaria(numero_cuenta):
+            raise ValueError(f"Número de cuenta bancaria inválido: {numero_cuenta}")
+        return numero_cuenta
+
+class CuentaBursatilDB(Base, AuditMixin):
+    """Cuentas registradas en Casas de Bolsa y Caja Venezolana de Valores"""
+    __tablename__ = "cuentas_bursatiles"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True) # ID interno
+    cliente_id: Mapped[int] = mapped_column(ForeignKey("clientes.id"), nullable=False) # Cliente asociado
+    casa_bolsa_id: Mapped[int] = mapped_column(ForeignKey("casas_bolsa.id"), nullable=False) # Casa de bolsa asociada
+    
+    # El dato más importante
+    subcuenta_cvv: Mapped[str] = mapped_column(String(50), unique=True, nullable=False) # ID en la Caja Venezolana de Valores
+    tipo_cuenta: Mapped[str] = mapped_column(String(30), default="Individual") # Individual, Conjunta, Jurídica
+    
+    # Relaciones
+    cliente = relationship("ClienteDB", back_populates="cuentas")
+    saldos = relationship("SaldoDB", back_populates="cuenta", cascade="all, delete-orphan")
+    movimientos = relationship("MovimientoDB", back_populates="cuenta")
     
     # Índices y restricciones 
     __table_args__ = (
-        Index('idx_cuenta_cliente', 'cliente_id'),  # Índice para búsquedas por cliente
-        Index('idx_cuenta_numero', 'numero_cuenta'), # Índice para búsquedas por número de cuenta
-        CheckConstraint('saldo_disponible_bs >= 0', name='check_saldo_bs'),
-        CheckConstraint('saldo_disponible_usd >= 0', name='check_saldo_usd'),
+        Index('idx_cuenta_cliente', 'cliente_id'),
+        Index('idx_cuenta_casa_bolsa', 'casa_bolsa_id'),
+        Index('idx_subcuenta_cvv', 'subcuenta_cvv')
     )
-    
-    @hybrid_property
-    def saldo_total_bs(self): # Suma de saldo disponible y bloqueado en Bs
-        return (self.saldo_disponible_bs or 0) + (self.saldo_bloqueado_bs or 0)
-    
-    @hybrid_property
-    def saldo_total_usd(self): # Suma de saldo disponible y bloqueado en USD
-        return (self.saldo_disponible_usd or 0) + (self.saldo_bloqueado_usd or 0)
     
     def to_dict(self):
         return {
             'id': self.id,
+            'subcuenta_cvv': self.subcuenta_cvv,
             'cliente_id': self.cliente_id,
-            'numero_cuenta': self.numero_cuenta,
             'tipo_cuenta': self.tipo_cuenta,
-            'moneda_base': self.moneda_base,
-            'saldo_disponible_bs': float(self.saldo_disponible_bs),
-            'saldo_disponible_usd': float(self.saldo_disponible_usd),
-            'saldo_total_bs': float(self.saldo_total_bs),
-            'saldo_total_usd': float(self.saldo_total_usd),
-            'estado': self.estado,
-            'fecha_apertura': self.fecha_apertura.isoformat()
+            'casa_bolsa_id': self.casa_bolsa_id
         }
 
-class ActivoDB(Base, AuditMixin):
-    """Modelo para activos bursátiles"""
-    __tablename__ = "activos"
+class SaldoDB(Base, AuditMixin):
+    """Balances por moneda para cada cuenta bursátil"""
+    __tablename__ = "saldos"
     
-    #
-    id: Mapped[str] = mapped_column(String(15), primary_key=True)  # Símbolo: BNC, EMPV, etc.
-    nombre: Mapped[str] = mapped_column(String(150), nullable=False) # Nombre completo del activo
-    rif: Mapped[Optional[str]] = mapped_column(String(15), nullable=False)  # RIF de la emopresa del activo
-    tipo: Mapped[str] = mapped_column(String(30), nullable=False)  # Acción, Bono, ETF, etc.
-    sector: Mapped[Optional[str]] = mapped_column(String(50), nullable=True) # Sector económico
-    subsector: Mapped[Optional[str]] = mapped_column(String(50), nullable=True) # Subsector económico
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True) # ID interno
+    cuenta_id: Mapped[int] = mapped_column(ForeignKey("cuentas_bursatiles.id"), nullable=False)
     
-    # Información bursátil
-    moneda: Mapped[str] = mapped_column(String(3), default=Moneda.BOLIVAR.value) # Moneda de cotización
-    precio_actual: Mapped[Decimal] = mapped_column(DECIMAL(20, 8), default=0.00000000) # Último precio conocido
+    moneda: Mapped[str] = mapped_column(String(3), nullable=False) # 'VES', 'USD', 'EUR'
     
-    # Características
-    lote_standard: Mapped[int] = mapped_column(Integer, default=100) # Tamaño del lote estándar
-    lote_minimo: Mapped[int] = mapped_column(Integer, default=1) # Tamaño del lote mínimo
-    precio_minimo: Mapped[Optional[Decimal]] = mapped_column(DECIMAL(20, 8), nullable=True) # Precio mínimo permitido
-    precio_maximo: Mapped[Optional[Decimal]] = mapped_column(DECIMAL(20, 8), nullable=True) # Precio máximo permitido
+    # Saldo que el cliente puede usar ya mismo
+    disponible: Mapped[Decimal] = mapped_column(DECIMAL(20, 8), default=0.0)
     
-    # Relaciones
-    ordenes = relationship("OrdenDB", back_populates="activo") # Órdenes asociadas
-    transacciones = relationship("TransaccionDB", back_populates="activo")  # Transacciones asociadas
-    portafolio_items = relationship("PortafolioItemDB", back_populates="activo") # Items en portafolio
+    # Dinero comprometido en órdenes de compra que aún no se han ejecutado
+    bloqueado: Mapped[Decimal] = mapped_column(DECIMAL(20, 8), default=0.0)
+    
+    cuenta = relationship("CuentaBursatilDB", back_populates="saldos")
     
     __table_args__ = (
+        UniqueConstraint('cuenta_id', 'moneda', name='uq_cuenta_moneda'),
+    )
+
+class ActivoDB(Base, AuditMixin):
+    """Acciones, Bonos y otros títulos de la BVC"""
+    __tablename__ = "activos"
+    
+    # Identificación del activo
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True) # ID interno
+    rif: Mapped[str] = mapped_column(String(15), nullable=False)  # RIF
+    nombre: Mapped[str] = mapped_column(String(150), nullable=False) # Nombre completo del activo
+    ticker: Mapped[str] = mapped_column(String(20), unique=True, nullable=False) # Símbolo en la bolsa
+    sector: Mapped[str] = mapped_column(String(100), nullable=True) # Sector económico
+    
+
+    ordenes = relationship("OrdenDB", back_populates="activo") # Órdenes asociadas al activo
+
+    __table_args__ = (
         Index('idx_activo_nombre', 'nombre'),
-        Index('idx_activo_tipo', 'tipo'),
         Index('idx_activo_sector', 'sector'),
-        Index('idx_activo_activo', 'activo'),
+        Index('idx_activo_ticker', 'ticker'),
     )
     
     def to_dict(self):
         return {
             'id': self.id,
+            'rif': self.rif,
             'nombre': self.nombre,
-            'tipo': self.tipo,
-            'sector': self.sector,
-            'moneda': self.moneda,
-            'precio_actual': float(self.precio_actual),
-            'lote_standard': self.lote_standard,
-            'activo': self.activo
+            'estatus': self.estatus
         }
 
 class OrdenDB(Base, AuditMixin):
-    """Modelo para órdenes bursátiles"""
+    """Instrucción de compra o venta"""
     __tablename__ = "ordenes"
     
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True) # ID interno
-    numero_orden: Mapped[str] = mapped_column(String(50), unique=True, nullable=False) # Número único de orden
-    cliente_id: Mapped[int] = mapped_column(Integer, ForeignKey('clientes.id'), nullable=False) # Cliente que realiza la orden
-    cuenta_id: Mapped[int] = mapped_column(Integer, ForeignKey('cuentas.id'), nullable=False) # Cuenta asociada
-    activo_id: Mapped[str] = mapped_column(String(20), ForeignKey('activos.id'), nullable=False) # Activo objeto de la orden
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    cliente_id: Mapped[int] = mapped_column(ForeignKey("clientes.id"), nullable=False)
+    cuenta_id: Mapped[int] = mapped_column(ForeignKey("cuentas_bursatiles.id"), nullable=False)
+    activo_id: Mapped[str] = mapped_column(ForeignKey("activos.ticker"), nullable=False)
     
-    # Tipo de orden
-    tipo_orden: Mapped[TipoOrden] = mapped_column(SQLAlchemyEnum(TipoOrden), nullable=False) # Compra o Venta
-    tipo_operacion: Mapped[TipoOperacion] = mapped_column(SQLAlchemyEnum(TipoOperacion), nullable=False) # Mercado o Limitada
+    tipo: Mapped[TipoOrden] = mapped_column(SQLAlchemyEnum(TipoOrden)) # Compra o Venta
+    cantidad_total: Mapped[int] = mapped_column(Integer, nullable=False)
+    precio_limite: Mapped[Decimal] = mapped_column(DECIMAL(20, 8)) # El precio máximo/mínimo que acepta
     
-    # Detalles
-    cantidad: Mapped[int] = mapped_column(Integer, nullable=False) # Cantidad de acciones
-    precio_limite: Mapped[Optional[Decimal]] = mapped_column(DECIMAL(20, 8), nullable=True) # Precio límite para órdenes limitadas
-    
-    # Estado
-    estado: Mapped[EstadoOrden] = mapped_column(SQLAlchemyEnum(EstadoOrden), default=EstadoOrden.PENDIENTE) # Estado de la orden
-    fecha_ejecucion: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True) # Fecha de ejecución
-    fecha_vencimiento: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True) # Fecha de vencimiento de la orden
-    
-    # Ejecución
-    cantidad_ejecutada: Mapped[int] = mapped_column(Integer, default=0) # Cantidad ya ejecutada
-    precio_ejecucion_promedio: Mapped[Optional[Decimal]] = mapped_column(DECIMAL(20, 8), nullable=True) # Precio promedio de ejecución
-    numero_operacion_bvc: Mapped[Optional[str]] = mapped_column(String(50), nullable=True) # Número de operación en la BVC
-    
-    # Comisiones
-    comision_base: Mapped[Decimal] = mapped_column(DECIMAL(20, 8), default=0.00) # Comisión base
-    iva_comision: Mapped[Decimal] = mapped_column(DECIMAL(20, 8), default=0.00) # IVA sobre la comisión
-    
-    # Tasa BCV al momento de la orden
-    tasa_bcv_snapshot: Mapped[Decimal] = mapped_column(DECIMAL(15, 4), nullable=True)  # Tasa BCV al momento de la orden
-    
-    # Metadatos
-    notas: Mapped[Optional[str]] = mapped_column(Text, nullable=True) # Notas adicionales
+    estado: Mapped[EstadoOrden] = mapped_column(SQLAlchemyEnum(EstadoOrden), default="Pendiente")
+    fecha_vencimiento: Mapped[date] = mapped_column(Date)
     
     # Relaciones
-    cliente = relationship("ClienteDB", back_populates="ordenes") # Cliente que realizó la orden
-    cuenta = relationship("CuentaDB", back_populates="ordenes") # Cuenta asociada a la orden
-    activo = relationship("ActivoDB", back_populates="ordenes") # Activo objeto de la orden
     transacciones = relationship("TransaccionDB", back_populates="orden") # Transacciones asociadas a la orden
+    activo = relationship("ActivoDB", back_populates="ordenes") # Activo asociado
     
     # Índices y restricciones
     __table_args__ = (
@@ -295,143 +252,89 @@ class OrdenDB(Base, AuditMixin):
         Index('idx_orden_activo', 'activo_id'), # Índice para búsquedas por activo
         Index('idx_orden_estado', 'estado'), # Índice para búsquedas por estado
         Index('idx_orden_fecha', 'fecha_registro'), # Índice para búsquedas por fecha
-        CheckConstraint('cantidad > 0', name='check_cantidad_positiva'), # Cantidad debe ser positiva
-        CheckConstraint('cantidad_ejecutada <= cantidad', name='check_cantidad_ejecutada'), # Ejecutada no puede exceder cantidad
     )
-    
-    
-    @hybrid_property
-    def monto_total(self): # Monto total de la orden (cantidad * precio)
-        if self.precio:
-            return self.cantidad * self.precio
-        return None
-    
-    @hybrid_property
-    def monto_ejecutado(self): # Monto ya ejecutado (cantidad_ejecutada * precio_ejecucion_promedio)
-        if self.precio_ejecucion_promedio and self.cantidad_ejecutada:
-            return self.cantidad_ejecutada * self.precio_ejecucion_promedio
-        return 0
-    
-    @hybrid_property # Porcentaje ejecutado
-    def porcentaje_ejecutado(self):
-        if self.cantidad > 0:
-            return (self.cantidad_ejecutada / self.cantidad) * 100
-        return 0
+
     
     def to_dict(self): # Convertir a diccionario
         return {
             'id': self.id,
-            'numero_orden': self.numero_orden,
+            'tipo': self.tipo.value,
+            'cantidad_total': self.cantidad_total,
+            'precio_limite': float(self.precio_limite),
             'cliente_id': self.cliente_id,
             'activo_id': self.activo_id,
-            'tipo_orden': self.tipo_orden.value,
-            'tipo_operacion': self.tipo_operacion.value,
-            'cantidad': self.cantidad,
             'estado': self.estado.value,
             'fecha_creacion': self.fecha_registro.isoformat(),
-            'cantidad_ejecutada': self.cantidad_ejecutada,
-            'porcentaje_ejecutado': float(self.porcentaje_ejecutado),
         }
 
 class TransaccionDB(Base, AuditMixin):
-    """Modelo para transacciones ejecutadas"""
+    """El 'calce' real en la bolsa con su desglose legal"""
     __tablename__ = "transacciones"
     
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True) # ID interno
-    orden_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey('ordenes.id'), nullable=True) # Orden asociada
-    cliente_id: Mapped[int] = mapped_column(Integer, ForeignKey('clientes.id'), nullable=False) # Cliente asociado
-    cuenta_id: Mapped[int] = mapped_column(Integer, ForeignKey('cuentas.id'), nullable=False) # Cuenta asociada
-    activo_id: Mapped[str] = mapped_column(String(20), ForeignKey('activos.id'), nullable=False) # Activo transaccionado
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    orden_id: Mapped[int] = mapped_column(ForeignKey("ordenes.id"), nullable=False)
     
-    # Detalles
-    tipo_transaccion: Mapped[str] = mapped_column(String(20), nullable=False)  # Compra, Venta, Dividendo
-    cantidad: Mapped[int] = mapped_column(Integer, nullable=False) # Cantidad de acciones
-    precio_unitario: Mapped[Decimal] = mapped_column(DECIMAL(15, 4), nullable=False) # Precio por acción
-    monto_total: Mapped[Decimal] = mapped_column(DECIMAL(15, 4), nullable=False) # Monto total de la transacción
-    moneda: Mapped[str] = mapped_column(String(3), nullable=False) # Moneda de la transacción
+    cantidad_ejecutada: Mapped[int] = mapped_column(Integer, nullable=False)
+    precio_ejecucion: Mapped[Decimal] = mapped_column(DECIMAL(20, 8), nullable=False)
+    monto_bruto: Mapped[Decimal] = mapped_column(DECIMAL(20, 8), nullable=False) # Cantidad x Precio
     
-    # Comisiones
-    comision_base: Mapped[Decimal] = mapped_column(DECIMAL(15, 4), default=0.00) # Comisión base
-    iva_comision: Mapped[Decimal] = mapped_column(DECIMAL(15, 4), default=0.00) # IVA sobre la comisión
-    comision_total: Mapped[Decimal] = mapped_column(DECIMAL(15, 4), default=0.00) # Comisión total
+    # Desglose de Comisiones (Crucial para el software)
+    comision_corretaje: Mapped[Decimal] = mapped_column(DECIMAL(20, 8))
+    comision_bvc: Mapped[Decimal] = mapped_column(DECIMAL(20, 8))
+    comision_cvv: Mapped[Decimal] = mapped_column(DECIMAL(20, 8))
+    iva: Mapped[Decimal] = mapped_column(DECIMAL(20, 8))
     
-    # Operación BVC
-    numero_operacion_bvc: Mapped[Optional[str]] = mapped_column(String(50), nullable=True) # Número de operación en la BVC
-    fecha_operacion_bvc: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True) # Fecha de la operación en la BVC
+    monto_neto: Mapped[Decimal] = mapped_column(DECIMAL(20, 8)) # Monto final cobrado/pagado
     
-    # Metadatos
-    notas: Mapped[Optional[str]] = mapped_column(Text, nullable=True) # Notas adicionales
+    tasa_bcv: Mapped[Decimal] = mapped_column(DECIMAL(20, 4)) # Tasa del momento del calce
+    numero_operacion_bvc: Mapped[str] = mapped_column(String(50)) # ID que da la bolsa
     
-    # Relaciones
-    orden = relationship("OrdenDB", back_populates="transacciones") # Orden asociada
-    cliente = relationship("ClienteDB", back_populates="transacciones") # Cliente asociado
-    cuenta = relationship("CuentaDB", back_populates="transacciones") # Cuenta asociada
-    activo = relationship("ActivoDB", back_populates="transacciones") # Activo transaccionado
+    orden = relationship("OrdenDB", back_populates="transacciones")
     
     # Índices y restricciones
     __table_args__ = (
-        Index('idx_transaccion_cliente', 'cliente_id'), # Índice para búsquedas por cliente
         Index('idx_transaccion_fecha', 'fecha_registro'), # Índice para búsquedas por fecha
-        Index('idx_transaccion_activo', 'activo_id'), # Índice para búsquedas por activo
-        Index('idx_transaccion_orden', 'orden_id'), # Índice para búsquedas por orden
-        CheckConstraint('cantidad > 0', name='check_transaccion_cantidad'), # Cantidad debe ser positiva
-        CheckConstraint('precio_unitario > 0', name='check_precio_positivo'), # Precio unitario debe ser positivo
+        Index('idx_transaccion_numero_bvc', 'numero_operacion_bvc'), # Índice para búsquedas por número de operación BVC
+        CheckConstraint('cantidad_ejecutada > 0', name='check_transaccion_cantidad'), # Cantidad debe ser positiva
+        CheckConstraint('precio_ejecucion > 0', name='check_precio_positivo'), # Precio unitario debe ser positivo
     )
-    
-    @hybrid_property
-    def monto_neto(self):
-        """Monto después de comisiones"""
-        return self.monto_total - (self.comision_total or 0)
     
     def to_dict(self): # Convertir a diccionario
         return {
             'id': self.id,
-            'cliente_id': self.cliente_id,
-            'activo_id': self.activo_id,
-            'tipo_transaccion': self.tipo_transaccion,
-            'cantidad': self.cantidad,
-            'precio_unitario': float(self.precio_unitario),
-            'monto_total': float(self.monto_total),
+            'orden_id': self.orden_id,
+            'cantidad_ejecutada': self.cantidad_ejecutada,
+            'precio_ejecucion': float(self.precio_ejecucion),
+            'monto_bruto': float(self.monto_bruto),
+            'comision_corretaje': float(self.comision_corretaje),
             'monto_neto': float(self.monto_neto),
-            'comision_total': float(self.comision_total) if self.comision_total else 0.0,
             'numero_operacion_bvc': self.numero_operacion_bvc,
             'fecha_registro': self.fecha_registro.isoformat()
         }
 
 class PortafolioItemDB(Base, AuditMixin):
-    """Modelo para items en portafolio de clientes"""
+    """Resumen consolidado de activos por cuenta"""
     __tablename__ = "portafolio_items"
     
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True) # ID interno
-    cliente_id: Mapped[int] = mapped_column(Integer, ForeignKey('clientes.id'), nullable=False) # Cliente propietario
-    cuenta_id: Mapped[int] = mapped_column(Integer, ForeignKey('cuentas.id'), nullable=False) # Cuenta asociada
-    activo_id: Mapped[str] = mapped_column(String(20), ForeignKey('activos.id'), nullable=False) # Activo en el portafolio
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    cuenta_id: Mapped[int] = mapped_column(ForeignKey("cuentas_bursatiles.id"), nullable=False)
+    activo_id: Mapped[str] = mapped_column(ForeignKey("activos.ticker"), nullable=False)
     
-    # Posición
-    cantidad: Mapped[int] = mapped_column(Integer, default=0) # Cantidad de acciones poseídas
-    costo_promedio: Mapped[Decimal] = mapped_column(DECIMAL(15, 4), default=0.0000) # Costo promedio por acción
-    costo_total: Mapped[Decimal] = mapped_column(DECIMAL(15, 4), default=0.0000) # Costo total de la posición
+    cantidad: Mapped[int] = mapped_column(Integer, default=0) # Total de acciones que posee
     
-    # Valorización
-    precio_actual: Mapped[Decimal] = mapped_column(DECIMAL(15, 4), default=0.0000) # Precio actual del activo
-    valor_mercado: Mapped[Decimal] = mapped_column(DECIMAL(15, 4), default=0.0000) # Valor de mercado de la posición
-    ganancia_perdida: Mapped[Decimal] = mapped_column(DECIMAL(15, 4), default=0.0000) # Ganancia o pérdida no realizada
-    porcentaje_rendimiento: Mapped[Decimal] = mapped_column(DECIMAL(10, 4), default=0.0000) # % de rendimiento de la posición
-    
-    # Metadatos
-    moneda: Mapped[str] = mapped_column(String(3), default=Moneda.BOLIVAR.value) # Moneda de la posición
+    # El "Costo Promedio" es vital para saber si hay ganancia o pérdida
+    costo_promedio: Mapped[Decimal] = mapped_column(DECIMAL(20, 8), default=0.0) 
     
     # Relaciones
-    cliente = relationship("ClienteDB") # Sin back_populates necesario
-    cuenta = relationship("CuentaDB", back_populates="portafolio_items") # Cuenta asociada
-    activo = relationship("ActivoDB", back_populates="portafolio_items") # Activo en el portafolio
+    cuenta = relationship("CuentaBursatilDB")
+    activo = relationship("ActivoDB")
+    
     
     # Índices y restricciones
     __table_args__ = (
-        Index('idx_portafolio_cliente', 'cliente_id'), # Índice para búsquedas por cliente
-        Index('idx_portafolio_activo', 'activo_id'), # Índice para búsquedas por activo
-        Index('idx_portafolio_cuenta', 'cuenta_id'), # Índice para búsquedas por cuenta
-        UniqueConstraint('cliente_id', 'cuenta_id', 'activo_id', name='uq_portafolio_item'), # Unicidad por cliente, cuenta y activo
+        Index('idx_portafolio_cuenta', 'cuenta_id'),
+        Index('idx_portafolio_activo', 'activo_id'),
+        UniqueConstraint('cuenta_id', 'activo_id', name='uq_cuenta_activo'),
     )
     
     @hybrid_property
@@ -442,68 +345,37 @@ class PortafolioItemDB(Base, AuditMixin):
     def to_dict(self): # Convertir a diccionario
         return {
             'id': self.id,
-            'cliente_id': self.cliente_id,
+            'cuenta_id': self.cuenta_id,
             'activo_id': self.activo_id,
             'cantidad': self.cantidad,
             'costo_promedio': float(self.costo_promedio),
-            'costo_total': float(self.costo_total),
-            'precio_actual': float(self.precio_actual),
-            'valor_mercado': float(self.valor_mercado),
-            'ganancia_perdida': float(self.ganancia_perdida),
-            'porcentaje_rendimiento': float(self.porcentaje_rendimiento),
-            'moneda': self.moneda
-        }
+            'fecha_registro': self.fecha_registro.isoformat()
+}
 
 class MovimientoDB(Base, AuditMixin):
-    """Modelo para movimientos de efectivo"""
+    """Registro de depósitos, retiros y cobro de comisiones"""
     __tablename__ = "movimientos"
     
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True) # ID interno
-    cliente_id: Mapped[int] = mapped_column(Integer, ForeignKey('clientes.id'), nullable=False) # Cliente asociado
-    cuenta_id: Mapped[int] = mapped_column(Integer, ForeignKey('cuentas.id'), nullable=False) # Cuenta asociada
+    id: Mapped[int] = mapped_column(Integer, primary_key=True) # ID interno
+    cuenta_id: Mapped[int] = mapped_column(ForeignKey("cuentas_bursatiles.id"), nullable=False) # Cuenta asociada
     
-    # Detalles
-    tipo_movimiento: Mapped[str] = mapped_column(String(30), nullable=False)  # Depósito, Retiro, Comisión, Interés
-    monto: Mapped[Decimal] = mapped_column(DECIMAL(15, 4), nullable=False) # Monto del movimiento
-    moneda: Mapped[str] = mapped_column(String(3), nullable=False) # Moneda del movimiento
-    concepto: Mapped[str] = mapped_column(Text, nullable=False) # Descripción del movimiento
+    tipo: Mapped[str] = mapped_column(String(20)) # 'Deposito', 'Retiro', 'Comision', 'Dividendo'
+    monto: Mapped[Decimal] = mapped_column(DECIMAL(20, 8), nullable=False)
+    moneda: Mapped[str] = mapped_column(String(3), nullable=False)
+    tasa_bcv: Mapped[Decimal] = mapped_column(DECIMAL(20, 4), nullable=False) # Tasa del día del movimiento
+    referencia: Mapped[Optional[str]] = mapped_column(String(100)) # Número de transferencia bancaria
     
-    # Estado
-    estado: Mapped[str] = mapped_column(String(20), default='Procesado')  # Pendiente, Procesado, Rechazado
-    fecha_movimiento: Mapped[datetime] = mapped_column(DateTime, default=func.now()) # Fecha del movimiento
-    fecha_procesamiento: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True) # Fecha de procesamiento
-    
-    # Referencias
-    numero_referencia: Mapped[Optional[str]] = mapped_column(String(50), nullable=True) # Número de referencia externo
-    banco_origen: Mapped[Optional[str]] = mapped_column(String(100), nullable=True) # Banco de origen
-    banco_destino: Mapped[Optional[str]] = mapped_column(String(100), nullable=True) # Banco de destino
-    
-    # Metadatos
-    notas: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    
-    # Relaciones
-    cliente = relationship("ClienteDB", back_populates="movimientos") # Cliente asociado
-    cuenta = relationship("CuentaDB", back_populates="movimientos") # Cuenta asociada
-    
-    # Índices y restricciones
-    __table_args__ = (
-        Index('idx_movimiento_cliente', 'cliente_id'), # Índice para búsquedas por cliente
-        Index('idx_movimiento_fecha', 'fecha_movimiento'), # Índice para búsquedas por fecha
-        Index('idx_movimiento_tipo', 'tipo_movimiento'), # Índice para búsquedas por tipo de movimiento
-        CheckConstraint('monto != 0', name='check_monto_no_cero'), # Monto no puede ser cero
-    )
+    cuenta = relationship("CuentaBursatilDB", back_populates="movimientos")
     
     def to_dict(self): # Convertir a diccionario
         return {
             'id': self.id,
-            'cliente_id': self.cliente_id,
-            'tipo_movimiento': self.tipo_movimiento,
+            'cuenta_id': self.cuenta_id,
+            'tipo': self.tipo,
             'monto': float(self.monto),
             'moneda': self.moneda,
-            'concepto': self.concepto,
-            'estado': self.estado,
-            'fecha_movimiento': self.fecha_movimiento.isoformat(),
-            'numero_referencia': self.numero_referencia
+            'tasa_bcv': float(self.tasa_bcv),
+            'fecha_registro': self.fecha_registro.isoformat()
         }
 
 class DocumentoDB(Base, AuditMixin):
@@ -511,22 +383,14 @@ class DocumentoDB(Base, AuditMixin):
     __tablename__ = "documentos"
     
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True) # ID interno
-    cliente_id: Mapped[int] = mapped_column(Integer, ForeignKey('clientes.id', ondelete='CASCADE'), nullable=False) # Cliente asociado
+    cliente_id: Mapped[int] = mapped_column(ForeignKey("clientes.id"), nullable=False) # Cliente asociado
     
     # Información del documento
     tipo_documento: Mapped[str] = mapped_column(String(50), nullable=False)  # Cédula, RIF, Estados de cuenta, etc.
     nombre_archivo: Mapped[str] = mapped_column(String(255), nullable=False) # Nombre original del archivo
     ruta_archivo: Mapped[str] = mapped_column(String(500), nullable=False) # Ruta en el sistema de archivos o URL
-    tamano: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # En bytes
-    formato: Mapped[str] = mapped_column(String(10), nullable=False)  # pdf, jpg, png, etc.
-    
-    # Metadatos
-    fecha_subida: Mapped[datetime] = mapped_column(DateTime, default=func.now())
-    fecha_documento: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    descripcion: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    
-    # Estado
-    verificado: Mapped[bool] = mapped_column(Boolean, default=False)
+    fecha_subida: Mapped[datetime] = mapped_column(DateTime, default=func.now()) # Fecha de subida del documento
+    verificado: Mapped[bool] = mapped_column(Boolean, default=False) # Si el documento ha sido verificado
     
     # Relaciones
     cliente = relationship("ClienteDB", back_populates="documentos")
@@ -534,7 +398,6 @@ class DocumentoDB(Base, AuditMixin):
     __table_args__ = (
         Index('idx_documento_cliente', 'cliente_id'),
         Index('idx_documento_tipo', 'tipo_documento'),
-        Index('idx_documento_fecha', 'fecha_documento'),
     )
     
     def to_dict(self):
@@ -543,10 +406,33 @@ class DocumentoDB(Base, AuditMixin):
             'cliente_id': self.cliente_id,
             'tipo_documento': self.tipo_documento,
             'nombre_archivo': self.nombre_archivo,
-            'formato': self.formato,
             'fecha_subida': self.fecha_subida.isoformat(),
             'verificado': self.verificado
         }
+
+class PrecioHistoricoDB(Base):
+    """Historial de precios de cierre para análisis de mercado"""
+    __tablename__ = "precios_historicos"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    activo_id: Mapped[str] = mapped_column(ForeignKey("activos.ticker"), nullable=False)
+    
+    fecha: Mapped[date] = mapped_column(Date, nullable=False)
+    precio_cierre: Mapped[Decimal] = mapped_column(DECIMAL(20, 8), nullable=False)
+    tasa_bcv: Mapped[Decimal] = mapped_column(DECIMAL(20, 4), nullable=False) # Para ver el precio en $ de ese día
+    
+    __table_args__ = (
+        Index('idx_precio_activo_fecha', 'activo_id', 'fecha'),
+    )
+
+class ConfiguracionComisionesDB(Base, AuditMixin):
+    """Tasas vigentes para cálculos automáticos"""
+    __tablename__ = "config_comisiones"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    nombre: Mapped[str] = mapped_column(String(50)) # 'Corretaje', 'BVC', 'CVV', 'IVA'
+    valor_porcentaje: Mapped[Decimal] = mapped_column(DECIMAL(10, 4)) # Ej: 0.0100 para 1%
+    activo: Mapped[bool] = mapped_column(Boolean, default=True)
 
 class ConfiguracionDB(Base, AuditMixin):
     """Modelo para configuración de la aplicación"""

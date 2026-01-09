@@ -4,23 +4,10 @@ Modelo Orden para operaciones bursátiles
 """
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional
 from enum import Enum
 from decimal import Decimal
-
-class TipoOrden(str, Enum):
-    COMPRA = "Compra"
-    VENTA = "Venta"
-
-class TipoOperacion(str, Enum):
-    MERCADO = "Mercado"
-    LIMITADA = "Limitada"
-
-class EstadoOrden(str, Enum):
-    PENDIENTE = "Pendiente"
-    EJECUTADA = "Ejecutada"
-    CANCELADA = "Cancelada"
-    RECHAZADA = "Rechazada"
+from ..utils.constants import TipoOrden, TipoOperacion, EstadoOrden
 
 @dataclass
 class Orden:
