@@ -20,28 +20,18 @@ class ClientesController:
 
         # Inicialización
         self.actualizar_tabla()
-        self.precargar_catalogos()
+
 
     def preparar_nuevo_cliente(self):
         """Limpia el formulario y cambia a la vista de detalle"""
         # 1. Limpiar campos de texto
         self.detalle.edit_nombre.clear()
         self.detalle.edit_rif.clear()
-        self.detalle.edit_cvv.clear()
         self.detalle.edit_email.clear()
         self.detalle.edit_tlf.clear()
-        self.detalle.edit_cuenta_num.clear()
         self.detalle.edit_dir.clear()
 
         # 2. Resetear combos (seleccionar por defecto)
-        if self.detalle.combo_banco.count() > 0:
-            self.detalle.combo_banco.setCurrentIndex(0)
-        if self.detalle.combo_casa_bolsa.count() > 0:
-            self.detalle.combo_casa_bolsa.setCurrentIndex(0)
-        if self.detalle.combo_perfil.count() > 0:
-            self.detalle.combo_perfil.setCurrentIndex(1)
-        if self.detalle.combo_estado.count() > 0:
-            self.detalle.combo_estado.setCurrentIndex(0)
         if self.detalle.combo_tipo_inversor.count() > 0:
             self.detalle.combo_tipo_inversor.setCurrentIndex(0)
             
@@ -51,27 +41,17 @@ class ClientesController:
         # Opcional: Poner el foco en el primer campo
         self.detalle.edit_nombre.setFocus()
 
-    def precargar_catalogos(self):
+    def precargar_catalogos(self, combo, tipo="banco"):
         """Carga bancos en los combos del detalle"""
         
         session = self.db_engine.get_session()
         try:
-            # --- 1. Llenar Bancos desde la DB ---
-            self.detalle.combo_banco.clear()
-            self.detalle.combo_banco.addItem("-- Seleccione un Banco --", None)
+            combo.clear()
+            combo.addItem("-- Seleccione --", None)
+            items = session.query(BancoDB).all() if tipo == "banco" else session.query(CasaBolsaDB).all()
+            for item in items:
+                combo.addItem(item.nombre, item.id)
             
-            bancos = session.query(BancoDB).filter_by(estatus=True).order_by(BancoDB.nombre).all()
-            for banco in bancos:
-                # addItem(texto_visible, data_interna)
-                self.detalle.combo_banco.addItem(banco.nombre, banco.id)
-            
-            # --- 2. Llenar Perfil de Riesgo (desde constants.py) ---
-            if hasattr(self.detalle, 'combo_perfil'):
-                self.detalle.combo_perfil.clear()
-                self.detalle.combo_perfil.addItem("-- Seleccione un Perfil --", None)
-                for perfil in PerfilRiesgo:
-                    self.detalle.combo_perfil.addItem(perfil.value, perfil)
-
             # --- 3. Llenar Tipo de Persona (desde constants.py) ---
             if hasattr(self.detalle, 'combo_tipo_inversor'):
                 self.detalle.combo_tipo_inversor.clear()
@@ -168,10 +148,6 @@ class ClientesController:
                     self.detalle.combo_banco.setCurrentIndex(0)
                 if self.detalle.combo_casa_bolsa.count() > 0:
                     self.detalle.combo_casa_bolsa.setCurrentIndex(0)
-                if self.detalle.combo_perfil.count() > 0:
-                    self.detalle.combo_perfil.setCurrentIndex(1)
-                if self.detalle.combo_estado.count() > 0:
-                    self.detalle.combo_estado.setCurrentIndex(0)
                 if self.detalle.combo_tipo_inversor.count() > 0:
                     self.detalle.combo_tipo_inversor.setCurrentIndex(0)
                 
@@ -229,3 +205,4 @@ class ClientesController:
             QMessageBox.critical(self.detalle, "Error", f"No se pudo guardar: {str(e)}")
         finally:
             session.close()
+            

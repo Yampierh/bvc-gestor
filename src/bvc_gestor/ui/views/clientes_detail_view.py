@@ -1,7 +1,7 @@
 # src/bvc_gestor/ui/views/clientes_detail_view.py
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                             QScrollArea, QFrame, QGridLayout, QLineEdit, 
-                            QComboBox, QPushButton, QDateEdit)
+                            QComboBox, QPushButton, QDateEdit, QRadioButton)
 from PyQt6.QtCore import pyqtSignal, Qt, QDate
 
 class ClienteDetalleView(QWidget):
@@ -18,11 +18,11 @@ class ClienteDetalleView(QWidget):
         # 2. Área de Contenido con Scroll
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        scroll.setObjectName("scrollArea")
+        scroll.setObjectName("ScrollArea")
         
         container = QWidget()
         self.content_layout = QVBoxLayout(container)
-        self.content_layout.setContentsMargins(0, 0, 0, 0)
+        self.content_layout.setContentsMargins(20, 0, 0, 0)
         self.content_layout.setSpacing(20)
 
         # --- SECCIONES (CARDS) ---
@@ -61,10 +61,10 @@ class ClienteDetalleView(QWidget):
 
     def create_card(self, title):
         card = QFrame()
-        card.setObjectName("card")
+        card.setObjectName("Card")
         layout = QGridLayout(card)
-        layout.setContentsMargins(20, 25, 20, 25)
-        layout.setSpacing(15)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(20)
         
         title_lbl = QLabel(title.upper())
         layout.addWidget(title_lbl, 0, 0, 1, 4)
@@ -86,22 +86,13 @@ class ClienteDetalleView(QWidget):
         
         self.content_layout.addWidget(card1)
 
-        # --- SECCIÓN 2: OPERACIONES BURSÁTILES ---
-        card2, lay2 = self.create_card("Información Bursátil")
-        
-        self.combo_casa_bolsa = self.add_combo(lay2, "Casa de Bolsa Principal", 1, 0, 2)
-        self.edit_cvv = self.add_input(lay2, "Subcuenta CVV (Caja de Valores)", 2, 0, 2)
-        self.content_layout.addWidget(card2)
+        # --- SECCIÓN 2: Bancos ---
+        card2, lay2 = self.create_card("Información Bancaria")
 
-        # --- SECCIÓN 3: BANCO ---
-        card3, lay3 = self.create_card("Información Bancaria")
-        
-        self.combo_banco = self.add_combo(lay3, "Banco", 1, 0, 2)
-        self.edit_cuenta_num = self.add_input(lay3, "Número de Cuenta (20 dígitos)", 2, 0, 2)
-        self.combo_perfil = self.add_combo(lay3, "Perfil de Riesgo", 4, 0)
-        self.combo_estado = self.add_combo(lay3, "Estado de Cuenta", 4, 1)
 
-        
+        # --- SECCIÓN 3: Cuenta bursatil ---
+        card3, lay3 = self.create_card("Información de la Cuenta Bursátil")
+
         self.content_layout.addWidget(card3)
         self.content_layout.addStretch()
 
@@ -125,6 +116,7 @@ class ClienteDetalleView(QWidget):
         v.addWidget(combo)
         layout.addWidget(w, row, col, 1, colspan)
         return combo
+    
 
     def add_date(self, layout, label, row, col):
         w = QWidget()
@@ -138,4 +130,18 @@ class ClienteDetalleView(QWidget):
         layout.addWidget(w, row, col)
         return date_edit
     
-    
+    def obtener_datos_bancos(self):
+        cuentas = []
+        for i in range(self.v_lay.count()):
+            widget = self.v_lay.itemAt(i).widget()
+            if widget:
+                combo = widget.findChild(QComboBox)
+                edit = widget.findChild(QLineEdit)
+                radio = widget.findChild(QRadioButton)
+                if combo.currentData(): # Solo si seleccionó un banco
+                    cuentas.append({
+                        "id": combo.currentData(),
+                        "numero": edit.text(),
+                        "principal": radio.isChecked()
+                    })
+        return cuentas
