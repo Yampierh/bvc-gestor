@@ -1,63 +1,47 @@
-/* --- CONFIGURACIÓN GENERAL --- */
-QMainWindow, QWidget, QDialog{
+/* =========================================================
+    CONFIGURACION GENERAL
+   ========================================================= */
+QMainWindow, QWidget, QDialog {
     background-color: #121212;
     color: #E0E0E0;
     font-family: 'Segoe UI', 'Sans Serif';
+    font-size: 14px;
 }
 
 QLabel {
     background-color: transparent;
+    color: #B0B0B0;
 }
 
-/* --- BARRA SUPERIOR --- */
-QFrame#toolbar {
+/* =========================================================
+    TOOLBAR SUPERIOR
+   ========================================================= */
+#toolbar {
     background-color: #1e1e1e;
     border-bottom: 1px solid #333333;
     border-radius: 12px;
-    padding: 0px;
-    margin-left: 20px;
-    margin-right: 20px;
+    margin: 0px 20px;
 }
 
-
-
-/* Tarjetas Generales */
-#Card, #MetricCard {
-    background-color: #1e1e1e;
-    border-radius: 12px;
-    padding: 0px 15px;
-    border: 1px solid #2d2d2d;
-}
-
-/* Estilos de Métricas */
-#MetricTitle {
-    color: #888888;
-    font-size: 18px;
-}
-
-#MetricValue {
-    color: #ffffff;
-    font-size: 26px;
+#header_title {
+    font-size: 20px;
     font-weight: bold;
+    color: white;
+    margin-left: 10px;
 }
 
-
-/* --- SIDEBAR / MENÚ LATERAL --- */
-QFrame#Sidebar {
-    background-color: #1e1e1e;
-    border-radius: 12px;
-    margin: 20px 0px 20px 0px;
-}
-
+/* =========================================================
+    BOTONES (BASE)
+   ========================================================= */
 QPushButton {
-    background-color: transparent;
-    color: #B0B0B0;
+    background: transparent;
     border: none;
-    padding: 12px 20px;
-    text-align: left;
-    font-size: 18px;
-    border-radius: 5px;
-    margin: 2px;
+    color: #B0B0B0;
+    padding: 8px 12px;
+    text-align: center;
+    font-size: 14px;
+    border-radius: 6px;
+    min-height: 32px;
 }
 
 QPushButton:hover {
@@ -70,22 +54,285 @@ QPushButton:checked {
     color: white;
     font-weight: bold;
 }
+/* =========================================================
+    BOTONES PRIMARIOS / SECUNDARIOS
+   ========================================================= */
+#primaryButton {
+    background-color: #FF6B00;
+    color: white;
+    font-weight: bold;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+}
 
-/* --- TABLAS ( QTableWidget ) --- */
-QTableWidget {
+#primaryButton:hover {
+    background-color: #E65A00;
+}
+
+#secondaryButton {
+    background-color: #333333;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid #444444;
+}
+
+#secondaryButton:hover {
+    background-color: #444444;
+    border-color: #555555;
+}
+
+
+/* =========================================================
+    METRICAS (DASHBOARD)
+   ========================================================= */
+#MetricTitle {
+    color: #888888;
+    font-size: 18px;
+}
+
+#MetricValue {
+    color: #ffffff;
+    font-size: 26px;
+    font-weight: bold;
+}
+
+
+/* =========================================================
+    BOTONES DE ICONO (+)
+   ========================================================= */
+#iconButton {
+    background: transparent;
+    border: none;
+    color: #888888;
+    font-size: 16px;
+    padding: 4px 8px;
+    min-width: 30px;
+    min-height: 30px;
+}
+
+#iconButton:hover {
+    color: #FF6B00;
+    background-color: #252525;
+    border-radius: 6px;
+}
+
+/* =========================================================
+    BOTON AGREGAR FILA (LISTAS DINAMICAS)
+   ========================================================= */
+#addRowButton {
+    background-color: #252525;
+    border: 1px dashed #444444;
+    color: #B0B0B0;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+#addRowButton:hover {
+    border-color: #FF6B00;
+    color: #FF6B00;
+    background-color: #2D2D2D;
+}
+
+/* =========================================================
+    TARJETAS (CARDS)
+   ========================================================= */
+#Card, #MetricCard {
+    background-color: #1e1e1e;
+    border-radius: 12px;
+    padding: 15px;
+    border: 1px solid #2d2d2d;
+}
+
+#card_title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #888888;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+
+/* =========================================================
+    FILAS DINAMICAS (BANCOS / CUENTAS BURSATILES)
+   ========================================================= */
+#RowItem {
+    background-color: #232323;
+    border: 1px solid #2d2d2d;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 4px 0;
+}
+
+/* =========================================================
+    FORMULARIOS
+   ========================================================= */
+#FormQWidget {
+    background-color: transparent;
+    margin: 2px 0;
+}
+
+#form_input, #form_combo, #form_date, #form_textarea {
+    background-color: #2D2D2D;
+    border: 1px solid #444444;
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: white;
+    font-size: 14px;
+    min-height: 36px;
+    selection-background-color: #FF6B00;
+}
+
+#form_input:focus, #form_combo:focus, #form_date:focus, #form_textarea:focus {
+    border: 1px solid #FF6B00;
+    outline: none;
+}
+
+#form_textarea {
+    min-height: 60px;
+}
+
+/* ComboBox desplegable */
+QComboBox::drop-down {
+    border: none;
+    width: 20px;
+}
+
+QComboBox::down-arrow {
+    image: none;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid #888888;
+}
+
+QComboBox QAbstractItemView {
+    background-color: #2D2D2D;
+    border: 1px solid #444444;
+    border-radius: 6px;
+    color: white;
+    selection-background-color: #FF6B00;
+    selection-color: white;
+}
+
+/* DateEdit con calendario */
+QDateEdit::drop-down {
+    border: none;
+    width: 25px;
+}
+
+/* =========================================================
+    ITEMS DINAMICOS (BANCOS / CUENTAS BURSATILES)
+   ========================================================= */
+#item_combo, #tipo_combo {
+    background-color: #2D2D2D;
+    border: 1px solid #444444;
+    border-radius: 6px;
+    padding: 6px 8px;
+    color: white;
+    min-height: 32px;
+}
+
+#item_input {
+    background-color: #2D2D2D;
+    border: 1px solid #444444;
+    border-radius: 6px;
+    padding: 6px 8px;
+    color: white;
+    min-height: 32px;
+}
+
+/* =========================================================
+    RADIO BUTTON (PRINCIPAL)
+   ========================================================= */
+#principal_radio {
+    color: #B0B0B0;
+    spacing: 6px;
+    font-size: 13px;
+}
+
+#principal_radio::indicator {
+    width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    border: 2px solid #555555;
+}
+
+#principal_radio::indicator:checked {
+    background-color: #FF6B00;
+    border: 2px solid #FF6B00;
+}
+
+/* =========================================================
+    BOTON ELIMINAR (TRASH)
+   ========================================================= */
+#delete_btn {
+    background-color: transparent;
+    border: 1px solid #444444;
+    color: #888888;
+    font-size: 12px;
+    padding: 4px;
+    border-radius: 4px;
+    min-width: 30px;
+    min-height: 30px;
+}
+
+#delete_btn:hover {
+    background-color: #2D2D2D;
+    color: #FF4444;
+    border-color: #FF4444;
+}
+
+/* =========================================================
+    DOCUMENTOS
+   ========================================================= */
+#document_label {
+    color: #888888;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+#document_name {
+    color: #E0E0E0;
+    font-size: 14px;
+}
+
+#document_check {
+    color: #B0B0B0;
+    font-size: 13px;
+}
+
+#document_check::indicator {
+    width: 16px;
+    height: 16px;
+}
+
+#document_check::indicator:checked {
+    background-color: #4CAF50;
+    border: 1px solid #4CAF50;
+}
+
+/* =========================================================
+    TABLAS (QTableView / QTableWidget)
+   ========================================================= */
+QTableWidget, QTableView {
     background-color: #1E1E1E;
     alternate-background-color: #252525;
     border: 1px solid #333333;
     gridline-color: #333333;
     border-radius: 8px;
     outline: none;
+    font-size: 13px;
 }
 
-QTableWidget::item {
-    padding: 10px;
+QTableWidget::item, QTableView::item {
+    padding: 8px 10px;
+    border-bottom: 1px solid #2D2D2D;
 }
 
-QTableWidget::item:selected {
+QTableWidget::item:selected, QTableView::item:selected {
     background-color: #3D3D3D;
     color: #FF6B00;
 }
@@ -93,105 +340,117 @@ QTableWidget::item:selected {
 QHeaderView::section {
     background-color: #2D2D2D;
     color: #888888;
-    padding: 8px;
+    padding: 10px;
     border: none;
     font-weight: bold;
     text-transform: uppercase;
     font-size: 11px;
-}
-
-/* --- ENTRADAS DE TEXTO ( QLineEdit / QComboBox / QTextEdit ) --- */
-QLineEdit, QComboBox, QTextEdit {
-    background-color: #2D2D2D;
-    border: 1px solid #444444;
-    border-radius: 4px;
-    padding: 8px;
-    color: white;
-}
-
-QLineEdit:focus, QComboBox:focus, QTextEdit:focus {
-    border: 1px solid #FF6B00;
-}
-
-/* --- BOTONES DE ACCIÓN --- */
-QPushButton#primaryButton {
-    background-color: #FF6B00;
-    color: white;
-    font-weight: bold;
-    border-radius: 4px;
-    padding: 8px 15px;
-}
-
-QPushButton#primaryButton:hover {
-    background-color: #E65A00;
-}
-
-QPushButton#secondaryButton {
-    background-color: #333333;
-    color: white;
-    border-radius: 4px;
-    padding: 8px 15px;
-}
-
-/* --- TABS (QTabWidget) --- */
-QTabWidget::pane {
-    border: 1px solid #333333;
-    background-color: #1E1E1E;
-    border-radius: 5px;
-    top: -1px;
-}
-
-QTabBar::tab {
-    background-color: #2D2D2D;
-    color: #888888;
-    padding: 10px 20px;
-    border-top-left-radius: 4px;
-    border-top-right-radius: 4px;
-    margin-right: 2px;
-}
-
-QTabBar::tab:selected {
-    background-color: #1E1E1E;
-    color: #FF6B00;
-    border-bottom: 2px solid #FF6B00;
-}
-
-/* --- TARJETAS Y CONTENEDORES DE DETALLE --- */
-QFrame#HeaderDetail {
-    background-color: #1E1E1E;
     border-bottom: 1px solid #333333;
-    padding: 10px;
 }
 
-QScrollArea {
+/* =========================================================
+    SCROLL AREA
+   ========================================================= */
+#scroll_area {
     border: none;
     background-color: transparent;
 }
 
-#HeaderTitle {
-    font-size: 28px;
-    font-weight: bold;
+#scroll_area QScrollBar:vertical {
+    background-color: #2D2D2D;
+    width: 12px;
+    border-radius: 6px;
+}
+
+#scroll_area QScrollBar::handle:vertical {
+    background-color: #444444;
+    border-radius: 6px;
+    min-height: 20px;
+}
+
+#scroll_area QScrollBar::handle:vertical:hover {
+    background-color: #555555;
+}
+
+#scroll_area QScrollBar::add-line:vertical, 
+#scroll_area QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+/* =========================================================
+    DATE EDIT CALENDARIO POPUP
+   ========================================================= */
+QCalendarWidget {
+    background-color: #2D2D2D;
+    border: 1px solid #444444;
+    border-radius: 6px;
+}
+
+QCalendarWidget QToolButton {
     color: white;
+    background-color: #333333;
+    border-radius: 4px;
 }
 
-#UserName {
-    color: #ffffff;
-    font-size: 18px;
-    font-weight: 500;
+QCalendarWidget QMenu {
+    background-color: #2D2D2D;
+    color: white;
+    border: 1px solid #444444;
 }
 
-#UserRole {
-    color: #888888;
-    font-size: 11px;
+QCalendarWidget QSpinBox {
+    background-color: #333333;
+    color: white;
+    border: 1px solid #444444;
+    border-radius: 4px;
 }
 
-#IconButton {
-    background: transparent;
-    border: none;
-    padding: 5px;
+QCalendarWidget QWidget#qt_calendar_navigationbar {
+    background-color: #333333;
 }
 
-#IconButton:hover {
-    background: #252525;
-    border-radius: 5px;
+/* =========================================================
+    CHECKBOXES
+   ========================================================= */
+QCheckBox {
+    color: #B0B0B0;
+    spacing: 8px;
+}
+
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #555555;
+    border-radius: 3px;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #FF6B00;
+    border: 2px solid #FF6B00;
+}
+
+QCheckBox::indicator:checked:hover {
+    background-color: #E65A00;
+    border: 2px solid #E65A00;
+}
+
+/* =========================================================
+    SEPARADORES / SPACERS
+   ========================================================= */
+QFrame#separator {
+    background-color: #333333;
+    max-height: 1px;
+    min-height: 1px;
+}
+
+/* =========================================================
+    TOOLTIPS
+   ========================================================= */
+QToolTip {
+    background-color: #2D2D2D;
+    color: #E0E0E0;
+    border: 1px solid #444444;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 12px;
 }

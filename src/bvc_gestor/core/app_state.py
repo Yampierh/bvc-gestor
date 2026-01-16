@@ -38,12 +38,8 @@ class AppState:
 
     def initialize_services(self, session):
         """Inicializa los servicios financieros inyectando la sesión de BD."""
-        from ..services.portfolio_service import PortfolioService
-        from ..services.orden_service import OrdenService
         
         self.db_session = session
-        self.portfolio_service = PortfolioService(session)
-        self.orden_service = OrdenService(session)
         self.base_datos_conectada = True
         logger.info("✓ Servicios de Negocio vinculados al AppState")
 

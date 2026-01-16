@@ -5,7 +5,7 @@ from PyQt6.QtCore import pyqtSignal, QPropertyAnimation, QEasingCurve
 from pathlib import Path
 
 from ...utils.logger import logger
-from ...ui.views import ClientesModule, DashboardView, CarteraView, TransaccionesView
+from ...ui.views import ClientesModule, DashboardView
 from ...ui.widgets import SidebarWidget, HeaderWidget
 
 
@@ -53,8 +53,8 @@ class MainWindow(QMainWindow):
         
         self.view_dashboard = DashboardView()
         self.view_clientes = ClientesModule()
-        self.view_cartera = CarteraView()
-        self.view_transacciones = TransaccionesView()
+        self.view_cartera = QWidget()
+        self.view_transacciones = QWidget()
         self.view_configuracion = QWidget()  # Placeholder para Configuración
         
         self.contenedor_paginas.addWidget(self.view_dashboard) # Índice 0

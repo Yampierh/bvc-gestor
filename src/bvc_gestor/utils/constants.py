@@ -45,8 +45,11 @@ class PerfilRiesgo(str, Enum):
     MODERADO = "Moderado"
     AGRESIVO = "Agresivo"
     
-class EstadoOrden(str, Enum):
-    PENDIENTE = "Pendiente"
+class EstadoOrden(Enum):
+    BORRADOR = "Borrador"                    # Creada pero no confirmada
+    ESPERANDO_FONDOS = "Esperando Fondos"    # NUEVO - Esperando depósito
+    PENDIENTE = "Pendiente"                  # En el mercado
+    PARCIALMENTE_EJECUTADA = "Parcialmente Ejecutada"
     EJECUTADA = "Ejecutada"
     CANCELADA = "Cancelada"
     RECHAZADA = "Rechazada"
@@ -59,6 +62,20 @@ class TipoOperacion(str, Enum):
     MERCADO = "Mercado"
     LIMITADA = "Limitada"
     
+
+class TipoMovimiento(str, Enum):
+    DEPOSITO = "Deposito" # DEPOSITO: Banco → Casa Bolsa
+    RETIRO = "Retiro" # RETIRO: Casa Bolsa → Banco
+    COMISION = "Comision" # COMISION: Cobro de comisión
+    DIVIDENDO = "Dividendo" # DIVIDENDO: Pago de dividendos
+
+
+class EstadoMovimiento(Enum):
+    PENDIENTE = "Pendiente"           # Registrado pero no confirmado
+    EN_TRANSITO = "En Tránsito"       # Transferencia en proceso
+    COMPLETADO = "Completado"         # Ya reflejado en cuenta
+    RECHAZADO = "Rechazado" 
+
 # Comisiones BVC (valores de ejemplo)
 COMISION_BASE = 0.005  # 0.5%
 IVA = 0.16  # 16%
