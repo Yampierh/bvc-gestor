@@ -39,7 +39,7 @@ QPushButton {
     color: #B0B0B0;
     padding: 8px 12px;
     text-align: center;
-    font-size: 14px;
+    font-size: 16px;
     border-radius: 6px;
     min-height: 32px;
 }
@@ -181,7 +181,7 @@ QPushButton:checked {
     border-radius: 6px;
     padding: 8px 10px;
     color: white;
-    font-size: 14px;
+    font-size: 16px;
     min-height: 36px;
     selection-background-color: #FF6B00;
 }
@@ -250,7 +250,7 @@ QDateEdit::drop-down {
 #principal_radio {
     color: #B0B0B0;
     spacing: 6px;
-    font-size: 13px;
+    font-size: 14px;
 }
 
 #principal_radio::indicator {
@@ -290,18 +290,18 @@ QDateEdit::drop-down {
    ========================================================= */
 #document_label {
     color: #888888;
-    font-size: 13px;
+    font-size: 18px;
     font-weight: bold;
 }
 
 #document_name {
     color: #E0E0E0;
-    font-size: 14px;
+    font-size: 16px;
 }
 
 #document_check {
     color: #B0B0B0;
-    font-size: 13px;
+    font-size: 15px;
 }
 
 #document_check::indicator {
@@ -324,7 +324,7 @@ QTableWidget, QTableView {
     gridline-color: #333333;
     border-radius: 8px;
     outline: none;
-    font-size: 13px;
+    font-size: 16px;
 }
 
 QTableWidget::item, QTableView::item {
@@ -453,4 +453,219 @@ QToolTip {
     border-radius: 4px;
     padding: 6px 10px;
     font-size: 12px;
+}
+
+
+/* =========================================================
+    MODULO DE OPERACIONES - ESTILOS ADICIONALES
+    Agregar al final de styles.qss
+   ========================================================= */
+
+/* =========================================================
+    DASHBOARD DE OPERACIONES
+   ========================================================= */
+#operacionesHeader {
+    background-color: #1e1e1e;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #2d2d2d;
+}
+
+#operacionesTitle {
+    font-size: 24px;
+    font-weight: bold;
+    color: #FFFFFF;
+}
+
+/* Selectores del header */
+#selectorLabel {
+    color: #888888;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#selectorCombo {
+    background-color: #2D2D2D;
+    border: 2px solid #444444;
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: white;
+    font-size: 16px;
+    min-height: 40px;
+}
+
+#selectorCombo:hover {
+    border-color: #FF6B00;
+}
+
+#selectorCombo:focus {
+    border-color: #FF6B00;
+    outline: none;
+}
+
+#selectorCombo::drop-down {
+    border: none;
+    width: 25px;
+}
+
+#selectorCombo::down-arrow {
+    image: none;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid #888888;
+    margin-right: 5px;
+}
+
+#selectorCombo QAbstractItemView {
+    background-color: #2D2D2D;
+    border: 1px solid #FF6B00;
+    border-radius: 8px;
+    color: white;
+    selection-background-color: #FF6B00;
+    selection-color: white;
+    padding: 4px;
+}
+
+/* =========================================================
+    METRIC CARDS (METRICAS DEL DASHBOARD)
+   ========================================================= */
+#metricCardGreen {
+    background-color: #1e1e1e;
+    border-radius: 12px;
+    padding: 20px;
+    border-left: 4px solid #4CAF50;
+    min-width: 200px;
+}
+
+#metricCardGreen:hover {
+    background-color: #252525;
+}
+
+#metricCardBlue {
+    background-color: #1e1e1e;
+    border-radius: 12px;
+    padding: 20px;
+    border-left: 4px solid #2196F3;
+    min-width: 200px;
+}
+
+#metricCardBlue:hover {
+    background-color: #252525;
+}
+
+#metricCardOrange {
+    background-color: #1e1e1e;
+    border-radius: 12px;
+    padding: 20px;
+    border-left: 4px solid #FF6B00;
+    min-width: 200px;
+}
+
+#metricCardOrange:hover {
+    background-color: #252525;
+}
+
+#metricCardPurple {
+    background-color: #1e1e1e;
+    border-radius: 12px;
+    padding: 20px;
+    border-left: 4px solid #9C27B0;
+    min-width: 200px;
+}
+
+#metricCardPurple:hover {
+    background-color: #252525;
+}
+
+#metricCardTitle {
+    color: #888888;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+#metricCardValue {
+    color: #FFFFFF;
+    font-size: 28px;
+    font-weight: bold;
+    margin: 8px 0;
+}
+
+#metricCardSubtitle {
+    color: #FF6B00;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* =========================================================
+    LINK BUTTON
+   ========================================================= */
+#linkButton {
+    background: transparent;
+    color: #2196F3;
+    border: none;
+    font-size: 14px;
+    padding: 4px 8px;
+    text-decoration: none;
+}
+
+#linkButton:hover {
+    color: #FF6B00;
+    text-decoration: underline;
+}
+
+/* =========================================================
+    BADGES DE ESTADO
+   ========================================================= */
+#badgeSuccess {
+    background-color: #4CAF50;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 14px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+#badgeWarning {
+    background-color: #FF9800;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 14px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+#badgeDanger {
+    background-color: #F44336;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 14px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+#badgeInfo {
+    background-color: #2196F3;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 14px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+#badgeSecondary {
+    background-color: #666666;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 14px;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
 }

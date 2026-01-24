@@ -1,3 +1,4 @@
+# src\bvc_gestor\ui\views\dashboard.py
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
                             QFrame, QGridLayout, QTableWidget, 
                             QTableWidgetItem, QHeaderView)

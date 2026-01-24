@@ -15,7 +15,7 @@ from .ui.windows.main_window import MainWindow
 from .utils.logger import logger
 from .database.engine import get_database
 from .core.app_state import AppState
-from .core.error_handler import GlobalExceptionHandler  # NUEVO IMPORT
+from .core.error_handler import GlobalExceptionHandler
 
 class BVCGestorApp:
     """Clase principal de la aplicación"""
@@ -144,7 +144,7 @@ class BVCGestorApp:
                     "Se han cargado datos de prueba en la base de datos:\n\n"
                     "• 10 Bancos venezolanos\n"
                     "• 8 Casas de Bolsa\n"
-                    "• 10 Activos bursátiles\n"
+                    "• 10 titulos bursátiles\n"
                     "• 10 Clientes de ejemplo\n"
                     "• Configuración básica\n\n"
                     "¡Ya puedes comenzar a usar la aplicación!"

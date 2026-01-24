@@ -1,3 +1,5 @@
+# src\bvc_gestor\ui\windows\main_window.py
+
 import sys
 from PyQt6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QVBoxLayout, QStackedWidget, QMessageBox, QGraphicsOpacityEffect
 from PyQt6.QtGui import QCloseEvent
@@ -5,7 +7,7 @@ from PyQt6.QtCore import pyqtSignal, QPropertyAnimation, QEasingCurve
 from pathlib import Path
 
 from ...utils.logger import logger
-from ...ui.views import ClientesModule, DashboardView
+from ...ui.views import ClientesModule, DashboardView, OperacionesModule
 from ...ui.widgets import SidebarWidget, HeaderWidget
 
 
@@ -53,13 +55,13 @@ class MainWindow(QMainWindow):
         
         self.view_dashboard = DashboardView()
         self.view_clientes = ClientesModule()
-        self.view_cartera = QWidget()
+        self.view_operaciones = OperacionesModule()
         self.view_transacciones = QWidget()
         self.view_configuracion = QWidget()  # Placeholder para Configuración
         
         self.contenedor_paginas.addWidget(self.view_dashboard) # Índice 0
         self.contenedor_paginas.addWidget(self.view_clientes)  # Índice 1
-        self.contenedor_paginas.addWidget(self.view_cartera)   # Índice 2
+        self.contenedor_paginas.addWidget(self.view_operaciones)   # Índice 2
         self.contenedor_paginas.addWidget(self.view_transacciones)   # Índice 3
         self.contenedor_paginas.addWidget(self.view_configuracion)   # Índice 4 (Configuración - placeholder)
 
@@ -102,7 +104,7 @@ class MainWindow(QMainWindow):
         # Primero cambiamos el título del header
         titulos = {
             0: "Main Dashboard", 1: "Gestión de Inversores",
-            2: "Cartera de Inversión", 3: "Historial de Transacciones",
+            2: "Operaciones Bursátiles", 3: "Historial de Transacciones",
             4: "Configuración"
         }
         self.header.update_title(titulos.get(index_destino, "PYME"))

@@ -152,7 +152,7 @@ class ClientesController:
                     QMessageBox.critical(self.detalle, "Error", f"No se pudo eliminar: {str(e)}")
 
     def filtrar_tabla(self):
-        """Filtrar tabla de clientes activos"""
+        """Filtrar tabla de clientes titulos"""
         filtro = self.lista.search_bar.text()
         
         with self._get_session() as session:
@@ -229,7 +229,7 @@ class ClientesController:
         """Obtener cliente con todas sus relaciones"""
         return session.query(ClienteDB).options(
             joinedload(ClienteDB.cuentas_bancarias),
-            joinedload(ClienteDB.cuentas),
+            joinedload(ClienteDB.cuentas_bursatiles),
             joinedload(ClienteDB.documentos)
         ).filter_by(id=cliente_id, estatus=True).first()
 
@@ -267,8 +267,8 @@ class ClientesController:
                 )
         
         # Cuentas bursátiles
-        if cliente.cuentas:
-            for cuenta in cliente.cuentas:
+        if cliente.cuentas_bursatiles:
+            for cuenta in cliente.cuentas_bursatiles:
                 self.detalle.add_cuenta_bursatil(
                     casa_id=cuenta.casa_bolsa_id,
                     cuenta=cuenta.cuenta,
@@ -279,7 +279,7 @@ class ClientesController:
         # Si no hay cuentas, agregar vacías
         if not cliente.cuentas_bancarias:
             self.detalle.add_cuenta_banco()
-        if not cliente.cuentas:
+        if not cliente.cuentas_bursatiles:
             self.detalle.add_cuenta_bursatil()
         
         # Documentos (opcional - cargaría en una lista separada)
@@ -373,9 +373,9 @@ class ClientesController:
     def _actualizar_cuentas_bursatiles(self, session, cliente):
         """Actualizar cuentas bursátiles del cliente"""
         # Eliminar cuentas existentes
-        for cuenta in cliente.cuentas:
+        for cuenta in cliente.cuentas_bursatiles:
             session.delete(cuenta)
-        cliente.cuentas.clear()
+        cliente.cuentas_bursatiles.clear()
         
         # Agregar nuevas cuentas
         datos_bursatiles = self.detalle.get_bursatiles_data()
@@ -386,7 +386,7 @@ class ClientesController:
                     cuenta=datos["cuenta"],
                     default=datos.get("default", False)
                 )
-                cliente.cuentas.append(cuenta)
+                cliente.cuentas_bursatiles.append(cuenta)
 
     def _subir_documento(self):
         """Manejar subida de documentos"""

@@ -77,13 +77,13 @@ src/bvc_gestor/
 ✅ **CasaBolsaDB** - Casas de bolsa
 ✅ **CuentaBancariaDB** - Cuentas bancarias de clientes
 ✅ **CuentaBursatilDB** - Cuentas en casas de bolsa
-✅ **ActivoDB** - Tickers de la BVC
+✅ **TituloDB** - Tickers de la BVC
 ✅ **DocumentoDB** - Documentos de clientes (Fase 2)
 ✅ **ConfiguracionDB** - Configuraciones generales (Fase 2)
 
 ### Tablas a Modificar
 
-#### 1. **ActivoDB** (Agregar campos)
+#### 1. **TituloDB** (Agregar campos)
 ```python
 # CAMPOS NUEVOS:
 precio_actual: Mapped[Decimal]                    # Último precio conocido
@@ -114,7 +114,7 @@ comision_estimada: Mapped[Decimal]        # Comisión calculada al crear
 monto_total_estimado: Mapped[Decimal]     # Total con comisiones
 
 # CAMBIAR:
-activo_id: ForeignKey("activos.id")       # Era ticker, ahora ID
+activo_id: ForeignKey("titulos.id")       # Era ticker, ahora ID
 ```
 
 #### 4. **MovimientoDB** (Refactorizar completo)
@@ -154,7 +154,7 @@ class PrecioActualDB(Base, AuditMixin):
     __tablename__ = "precios_actuales"
     
     id: Mapped[int]
-    activo_id: Mapped[str] = ForeignKey("activos.ticker")
+    activo_id: Mapped[str] = ForeignKey("titulos.ticker")
     
     precio: Mapped[Decimal]
     volumen: Mapped[int]                      # Volumen del día
@@ -444,11 +444,11 @@ Usuario hace clic en "Actualizar Precios"
   ↓
 Sistema ejecuta:
   1. scraper_bvc_service.actualizar_precios_masivo()
-  2. Para cada ticker en ActivoDB:
+  2. Para cada ticker en TituloDB:
      - Hacer scraping de la BVC
      - Obtener: precio, volumen, variación
      - Actualizar/Crear PrecioActualDB
-     - Actualizar ActivoDB.precio_actual
+     - Actualizar TituloDB.precio_actual
   3. Manejar errores y timeouts
   4. Generar reporte de actualización
 ```
@@ -689,7 +689,7 @@ class ScraperBVCService:
         
     def actualizar_precios_masivo(self) -> dict:
         """
-        Actualiza todos los tickers activos
+        Actualiza todos los tickers titulos
         
         Returns:
             {

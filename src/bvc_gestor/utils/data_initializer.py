@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 from bvc_gestor.database.engine import get_database
 from bvc_gestor.database.models_sql import (
     BancoDB, CasaBolsaDB, ClienteDB, CuentaBancariaDB, 
-    CuentaBursatilDB, DocumentoDB, ActivoDB, ConfiguracionDB
+    CuentaBursatilDB, DocumentoDB, TituloDB
 )
 from bvc_gestor.utils.constants import TipoInversor
 
@@ -40,14 +40,14 @@ class DataInitializer:
             # 2. Cargar casas de bolsa (desde CSV o datos de prueba)
             self._load_casas_bolsa()
             
-            # 3. Cargar activos (desde CSV o datos de prueba)
-            self._load_activos()
+            # 3. Cargar titulos (desde CSV o datos de prueba)
+            self._load_titulos()
             
             # 4. Crear clientes de prueba
             self._create_clientes_prueba()
             
             # 5. Crear configuración básica
-            self._create_configuracion()
+            #self._create_configuracion()
             
             self.session.commit()
             print("✅ Base de datos inicializada correctamente!")
@@ -154,35 +154,36 @@ class DataInitializer:
         self.session.commit()
         print(f"✅ {len(casas_prueba)} casas de bolsa creadas")
     
-    def _load_activos(self):
-        """Cargar activos desde CSV o crear datos de prueba"""
-        csv_path = Path(__file__).parent.parent / "data" / "activos.csv"
+    def _load_titulos(self):
+        """Cargar titulos desde CSV o crear datos de prueba"""
+        csv_path = Path(__file__).parent.parent / "data" / "titulos.csv"
         
         # Si existe CSV, cargarlo
         if csv_path.exists():
-            print(f"📄 Cargando activos desde {csv_path}...")
-            activos_creados = 0
+            print(f"📄 Cargando titulos desde {csv_path}...")
+            titulos_creados = 0
             
             with open(csv_path, 'r', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
                 for row in reader:
-                    if not self.session.query(ActivoDB).filter_by(ticker=row['ticker']).first():
-                        activo = ActivoDB(
+                    if not self.session.query(TituloDB).filter_by(ticker=row['ticker']).first():
+                        titulo = TituloDB(
                             rif=row['rif'],
                             nombre=row['nombre'],
                             ticker=row['ticker'],
+                            tipo=row['tipo'],
                             sector=row.get('sector', 'General')
                         )
-                        self.session.add(activo)
-                        activos_creados += 1
+                        self.session.add(titulo)
+                        titulos_creados += 1
             
             self.session.commit()
-            print(f"✅ {activos_creados} activos cargados desde CSV")
+            print(f"✅ {titulos_creados} titulos cargados desde CSV")
             return
         
         # Si no hay CSV, crear datos de prueba
-        print("📝 Creando activos de prueba...")
-        activos_prueba = [
+        print("📝 Creando titulos de prueba...")
+        titulos_prueba = [
             {"rif": "J-50000000-0", "nombre": "Petróleos de Venezuela S.A.", "ticker": "PDVSA", "sector": "Petróleo y Gas"},
             {"rif": "J-50000001-1", "nombre": "Corporación Eléctrica Nacional", "ticker": "CORPOELEC", "sector": "Energía"},
             {"rif": "J-50000002-2", "nombre": "Cervecería Polar", "ticker": "POLAR", "sector": "Alimentos y Bebidas"},
@@ -195,13 +196,13 @@ class DataInitializer:
             {"rif": "J-50000009-9", "nombre": "Cemento Andino", "ticker": "CANDINO", "sector": "Construcción"},
         ]
         
-        for activo in activos_prueba:
-            if not self.session.query(ActivoDB).filter_by(ticker=activo["ticker"]).first():
-                activo_db = ActivoDB(**activo)
-                self.session.add(activo_db)
+        for titulo in titulos_prueba:
+            if not self.session.query(TituloDB).filter_by(ticker=titulo["ticker"]).first():
+                titulo_db = TituloDB(**titulo)
+                self.session.add(titulo_db)
         
         self.session.commit()
-        print(f"✅ {len(activos_prueba)} activos creados")
+        print(f"✅ {len(titulos_prueba)} titulos creados")
     
     def _create_clientes_prueba(self):
         """Crear 10 clientes de prueba con datos realistas"""
@@ -373,33 +374,6 @@ class DataInitializer:
         
         self.session.commit()
         print(f"✅ {clientes_creados} clientes de prueba creados con cuentas y documentos")
-    
-    def _create_configuracion(self):
-        """Crear configuración básica de la aplicación"""
-        print("⚙️  Creando configuración básica...")
-        
-        configuraciones = [
-            {"clave": "app_nombre", "valor": "BVC Gestor", "tipo": "string", "categoria": "General", "descripcion": "Nombre de la aplicación", "editable": False},
-            {"clave": "app_version", "valor": "1.0.0", "tipo": "string", "categoria": "General", "descripcion": "Versión de la aplicación", "editable": False},
-            {"clave": "empresa_nombre", "valor": "Tu Empresa de Inversiones", "tipo": "string", "categoria": "Empresa", "descripcion": "Nombre de la empresa", "editable": True},
-            {"clave": "empresa_rif", "valor": "J-12345678-9", "tipo": "string", "categoria": "Empresa", "descripcion": "RIF de la empresa", "editable": True},
-            {"clave": "tasa_iva", "valor": "16.0", "tipo": "number", "categoria": "Fiscal", "descripcion": "Tasa de IVA actual (%)", "editable": True},
-            {"clave": "comision_corretaje", "valor": "1.5", "tipo": "number", "categoria": "Comisiones", "descripcion": "Comisión de corretaje (%)", "editable": True},
-            {"clave": "comision_bvc", "valor": "0.25", "tipo": "number", "categoria": "Comisiones", "descripcion": "Comisión BVC (%)", "editable": True},
-            {"clave": "dias_vencimiento_rif", "valor": "365", "tipo": "number", "categoria": "Clientes", "descripcion": "Días para vencimiento de RIF por defecto", "editable": True},
-            {"clave": "mostrar_tutorial", "valor": "true", "tipo": "boolean", "categoria": "UI", "descripcion": "Mostrar tutorial al inicio", "editable": True},
-            {"clave": "tema_oscuro", "valor": "true", "tipo": "boolean", "categoria": "UI", "descripcion": "Usar tema oscuro", "editable": True},
-        ]
-        
-        configs_creadas = 0
-        for config in configuraciones:
-            if not self.session.query(ConfiguracionDB).filter_by(clave=config["clave"]).first():
-                config_db = ConfiguracionDB(**config)
-                self.session.add(config_db)
-                configs_creadas += 1
-        
-        self.session.commit()
-        print(f"✅ {configs_creadas} configuraciones creadas")
 
 
 def init_database():
