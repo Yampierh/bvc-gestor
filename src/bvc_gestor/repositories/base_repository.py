@@ -263,8 +263,23 @@ class BaseRepository:
         """Busca múltiples registros con paginación"""
         try:
             with self.db_engine.get_session() as session:
-                query = session.query(self.model_class).filter_by(**filters)
+                query = session.query(self.model_class)
                 
+                # Aplicar filtros CON VALIDACIÓN
+                if filters:
+                    valid_filters = {}
+                    
+                    for key, value in filters.items():
+                        if hasattr(self.model_class, key):
+                            valid_filters[key] = value
+                        else:
+                            logger.warning(f"⚠️ Filtro ignorado: '{key}' no existe en {self.model_class.__name__}")
+                    
+                    if valid_filters:
+                        query = query.filter_by(**valid_filters)
+                    else:
+                        logger.warning(f"⚠️ Ningún filtro válido para {self.model_class.__name__}")
+                        
                 # Ordenamiento
                 if order_by:
                     if order_by.startswith('-'):
@@ -284,10 +299,13 @@ class BaseRepository:
                     query = query.limit(limit)
                 
                 entities = query.all()
-                return [self._to_dict(e) for e in entities]
+                results  = [self._to_dict(e) for e in entities]
         
+                logger.debug(f"🔍 {self.model_class.__name__}.find_many() → {len(results)} resultados")
+                return results
+            
         except Exception as e:
-            logger.error(f"Error en find_many: {e}")
+            logger.error(f"❌ Error en find_many {self.model_class.__name__}: {e}", exc_info=True)
             return []
     
     def bulk_create(self, data_list: List[Dict]) -> int:

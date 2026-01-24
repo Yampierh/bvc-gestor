@@ -13,8 +13,9 @@ from ..repositories.orden_repository import OrdenRepository
 from ..repositories.saldo_repository import SaldoRepository
 from ..repositories.portafolio_repository import PortafolioRepository
 from ..repositories.base_repository import BaseRepository
-from ..database.models_sql import ClienteDB, CuentaBursatilDB, CuentaBancariaDB, TituloDB
+from ..database.models_sql import ClienteDB, CuentaBursatilDB, CuentaBancariaDB, TituloDB, BancoDB, CasaBolsaDB
 from ..utils.constants import TipoOrden, EstadoOrden
+from ..utils.formatters import DataFormatter
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +64,50 @@ class OperacionesController(QObject):
         self.cuenta_bursatil_actual_id = None
         self.cuenta_bancaria_actual_id = None
         
+        self._nombres_cache = {
+            'bancos': {},      # {id: nombre}
+            'casas_bolsa': {}  # {id: nombre}
+        }
+        
+        # Cargar cache de nombres
+        self._cargar_cache_nombres()
+        
         self.setup_connections()
+    def _cargar_cache_nombres(self):
+        """Carga en cache los nombres de bancos y casas de bolsa"""
+        try:
+            logger.info("🔄 Cargando cache de nombres...")
+            
+            # Cargar bancos
+            bancos_repo = BaseRepository(self.db_engine, BancoDB)
+            bancos = bancos_repo.find_many(estatus=True)
+            self._nombres_cache['bancos'] = {
+                b['id']: b.get('nombre', f"Banco {b['id']}")
+                for b in bancos
+            }
+            
+            # Cargar casas de bolsa
+            casas_repo = BaseRepository(self.db_engine, CasaBolsaDB)
+            casas = casas_repo.find_many(estatus=True)
+            self._nombres_cache['casas_bolsa'] = {
+                c['id']: c.get('nombre', f"Casa {c['id']}")
+                for c in casas
+            }
+            
+            logger.info(f"✅ Cache cargado: "
+                        f"{len(self._nombres_cache['bancos'])} bancos, "
+                        f"{len(self._nombres_cache['casas_bolsa'])} casas")
+            
+        except Exception as e:
+            logger.error(f"❌ Error cargando cache: {e}")
+    
+    def get_banco_nombre(self, banco_id: int) -> str:
+        """Obtiene nombre de un banco desde cache"""
+        return self._nombres_cache['bancos'].get(banco_id, f"Banco {banco_id}")
+    
+    def get_casa_bolsa_nombre(self, casa_id: int) -> str:
+        """Obtiene nombre de una casa de bolsa desde cache"""
+        return self._nombres_cache['casas_bolsa'].get(casa_id, f"Casa {casa_id}")
     
     # ==================== SETUP ====================
     
@@ -105,24 +149,84 @@ class OperacionesController(QObject):
         self.module.setCurrentIndex(2)
         self.actualizar_portafolio()
     
-    # ==================== EVENTOS DE SELECCIÓN ====================
     
+    # ==================== MÉTODOS FORMATEADOS ====================
+    
+    def obtener_inversores_formateados(self) -> List[Dict]:
+        """Retorna lista de inversores formateados para UI"""
+        inversores = self.cliente_repo.find_many(estatus=True)
+        
+        return [
+            {
+                'id': inv['id'],
+                'texto': DataFormatter.format_inversor(inv),
+                'tooltip': f"{inv.get('nombre_completo')}\n"
+                            f"RIF/Cédula: {inv.get('rif_cedula')}",
+                'data': inv
+            }
+            for inv in inversores
+        ]
+    
+    def obtener_cuentas_bancarias_formateadas(self, cliente_id: int) -> List[Dict]:
+        """Retorna cuentas bancarias formateadas para UI"""
+        cuentas = self.cuenta_bancaria_repo.find_many(
+            cliente_id=cliente_id,
+            estatus=True
+        )
+        
+        return [
+            {
+                'id': cuenta['id'],
+                'texto': DataFormatter.format_cuenta_bancaria(
+                    cuenta,
+                    self.get_banco_nombre(cuenta.get('banco_id'))
+                ),
+                'tooltip': DataFormatter.get_cuenta_bancaria_tooltip(
+                    cuenta,
+                    self.get_banco_nombre(cuenta.get('banco_id'))
+                ),
+                'data': cuenta,
+                'banco_nombre': self.get_banco_nombre(cuenta.get('banco_id'))
+            }
+            for cuenta in cuentas
+        ]
+    
+    def obtener_cuentas_bursatiles_formateadas(self, cliente_id: int) -> List[Dict]:
+        """Retorna cuentas bursátiles formateadas para UI"""
+        cuentas = self.cuenta_bursatil_repo.find_many(
+            cliente_id=cliente_id,
+            estatus=True
+        )
+        
+        return [
+            {
+                'id': cuenta['id'],
+                'texto': DataFormatter.format_cuenta_bursatil(
+                    cuenta,
+                    self.get_casa_bolsa_nombre(cuenta.get('casa_bolsa_id'))
+                ),
+                'tooltip': DataFormatter.get_cuenta_bursatil_tooltip(
+                    cuenta,
+                    self.get_casa_bolsa_nombre(cuenta.get('casa_bolsa_id'))
+                ),
+                'data': cuenta,
+                'casa_nombre': self.get_casa_bolsa_nombre(cuenta.get('casa_bolsa_id'))
+            }
+            for cuenta in cuentas
+        ]
+    
+    
+    # ==================== EVENTOS DE SELECCIÓN ====================
     def on_inversor_seleccionado(self, inversor_id: int):
         """Handler cuando se selecciona un inversor"""
         self.inversor_actual_id = inversor_id
         
-        # Cargar cuentas bursátiles del inversor
-        cuentas_bursatiles = self.cuenta_bursatil_repo.find_many(
-            cliente_id=inversor_id,
-            activo=True
-        )
-        self.dashboard.poblar_cuentas_bursatiles(cuentas_bursatiles)
+        # Cargar cuentas formateadas
+        cuentas_bursatiles = self.obtener_cuentas_bursatiles_formateadas(inversor_id)
+        cuentas_bancarias = self.obtener_cuentas_bancarias_formateadas(inversor_id)
         
-        # Cargar cuentas bancarias
-        cuentas_bancarias = self.cuenta_bancaria_repo.find_many(
-            cliente_id=inversor_id,
-            activo=True
-        )
+        # Poblar UI
+        self.dashboard.poblar_cuentas_bursatiles(cuentas_bursatiles)
         self.dashboard.poblar_cuentas_bancarias(cuentas_bancarias)
         
         # Actualizar métricas
@@ -142,8 +246,8 @@ class OperacionesController(QObject):
     
     def actualizar_dashboard(self):
         """Actualiza todos los componentes del dashboard"""
-        # Cargar inversores activos
-        inversores = self.cliente_repo.find_many(activo=True, tipo='Inversor')
+        # Cargar inversores formateados
+        inversores = self.obtener_inversores_formateados()
         self.dashboard.poblar_inversores(inversores)
         
         # Actualizar métricas
@@ -252,9 +356,7 @@ class OperacionesController(QObject):
         dialog = NuevaCompraDialog(
             parent=self.module,
             service=self.operaciones_service,
-            cliente_id=self.inversor_actual_id,
-            cuenta_bursatil_id=self.cuenta_bursatil_actual_id,
-            cuenta_bancaria_id=self.cuenta_bancaria_actual_id
+            inversor_id=self.inversor_actual_id,
         )
         
         dialog.orden_creada.connect(self.on_orden_creada)
@@ -395,15 +497,15 @@ class OperacionesController(QObject):
     
     def obtener_inversores_activos(self):
         """Retorna lista de inversores activos"""
-        return self.cliente_repo.find_many(activo=True, tipo='Inversor')
+        return self.cliente_repo.find_many(estatus=True)
     
     def obtener_cuentas_bursatiles_cliente(self, cliente_id: int):
         """Retorna cuentas bursátiles de un cliente"""
-        return self.cuenta_bursatil_repo.find_many(cliente_id=cliente_id, activo=True)
+        return self.obtener_cuentas_bursatiles_formateadas(cliente_id)
     
     def obtener_cuentas_bancarias_cliente(self, cliente_id: int):
         """Retorna cuentas bancarias de un cliente"""
-        return self.cuenta_bancaria_repo.find_many(cliente_id=cliente_id, activo=True)
+        return self.obtener_cuentas_bancarias_formateadas(cliente_id)
     
     def obtener_saldo_disponible(self, cuenta_bancaria_id: int) -> float:
         """Retorna saldo disponible de una cuenta"""
@@ -412,7 +514,7 @@ class OperacionesController(QObject):
     
     def buscar_activo_por_ticker(self, ticker: str):
         """Busca un activo por ticker"""
-        return self.titulo_repo.find_one(ticker=ticker.upper(), activo=True)
+        return self.titulo_repo.find_one(ticker=ticker.upper(), estatus=True)
     
     def obtener_portafolio_cuenta(self, cuenta_bursatil_id: int):
         """Obtiene portafolio de una cuenta"""
@@ -420,7 +522,7 @@ class OperacionesController(QObject):
     
     def obtener_todos_tickers_activos(self):
         """Retorna todos los tickers activos"""
-        return self.titulo_repo.find_many(activo=True)
+        return self.titulo_repo.find_many(estatus=True)
     
     def actualizar_precios_masivo(self, actualizados: list) -> bool:
         """Actualiza precios de múltiples tickers"""

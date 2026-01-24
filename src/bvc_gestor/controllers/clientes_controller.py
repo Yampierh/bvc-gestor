@@ -188,8 +188,6 @@ class ClientesController:
         if self.detalle.cmb_tipo.count() > 0:
             self.detalle.cmb_tipo.setCurrentIndex(0)
         
-        # Resetear fecha
-        self.detalle.date_rif.setDate(QDate.currentDate())
         
         # Limpiar widgets dinámicos
         self.detalle.clear_dynamic()
@@ -248,10 +246,7 @@ class ClientesController:
             index = self.detalle.cmb_tipo.findData(cliente.tipo_inversor)
             if index >= 0:
                 self.detalle.cmb_tipo.setCurrentIndex(index)
-        
-        # Fecha de vencimiento RIF
-        if cliente.fecha_vencimiento_rif:
-            self.detalle.date_rif.setDate(cliente.fecha_vencimiento_rif)
+
         
         # Limpiar widgets existentes
         self.detalle.clear_dynamic()
@@ -349,7 +344,6 @@ class ClientesController:
         if tipo:
             cliente.tipo_inversor = tipo
         
-        cliente.fecha_vencimiento_rif = self.detalle.date_rif.date().toPyDate()
 
     def _actualizar_cuentas_bancarias(self, session, cliente):
         """Actualizar cuentas bancarias del cliente"""

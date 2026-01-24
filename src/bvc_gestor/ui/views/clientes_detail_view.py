@@ -106,7 +106,7 @@ class ClienteDetalleView(QWidget):
         self.txt_nombre = self._add_input(layout, "Nombre/Razón Social", "Ingrese nombre completo", 1, 0)
         self.txt_rif = self._add_input(layout, "RIF/Cédula", "J-12312345-1", 2, 0)
         self.cmb_tipo = self._add_combo(layout, "Tipo de Inversor", 2, 1)
-        self.date_rif = self._add_date(layout, "Vencimiento RIF", 2, 2)
+        #self.date_rif = self._add_date(layout, "Vencimiento RIF", 2, 2)
         self.txt_email = self._add_input(layout, "Correo", "correo@dominio.com", 3, 0)
         self.txt_telefono = self._add_input(layout, "Teléfono", "0414-1234567", 3, 1)
         self.txt_direccion = self._add_text_area(layout, "Dirección Fiscal", "Calle, municipio, ciudad", 4, 0, 2)
@@ -359,23 +359,6 @@ class ClienteDetalleView(QWidget):
         
         layout.addWidget(widget, row, col, 1, colspan)
         return combo
-    
-    def _add_date(self, layout, label, row, col):
-        """Agregar selector de fecha"""
-        widget = QWidget()
-        widget.setObjectName("FormQWidget")
-        vbox = QVBoxLayout(widget)
-        vbox.setContentsMargins(0, 0, 0, 0)
-        vbox.addWidget(QLabel(label))
-        
-        date_edit = QDateEdit()
-        date_edit.setCalendarPopup(True)
-        date_edit.setDate(QDate.currentDate())
-        date_edit.setObjectName("form_date")
-        vbox.addWidget(date_edit)
-        
-        layout.addWidget(widget, row, col)
-        return date_edit
     
     def _agregar_documento(self):
         """Método para manejar subida de documentos"""

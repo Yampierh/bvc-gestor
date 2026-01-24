@@ -74,7 +74,7 @@ class MainWindow(QMainWindow):
         """Maneja la animación de desvanecimiento y actualiza el título"""
         if index_destino == self.contenedor_paginas.currentIndex():
             return
-
+        
         # 1. Identificar widgets
         self.pag_actual = self.contenedor_paginas.currentWidget()
         self.pag_siguiente = self.contenedor_paginas.widget(index_destino)

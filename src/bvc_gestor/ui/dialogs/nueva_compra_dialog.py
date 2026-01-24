@@ -36,10 +36,10 @@ class NuevaCompraDialog(QDialog):
     # Señal emitida cuando se crea la orden exitosamente
     orden_creada = pyqtSignal(int)  # orden_id
     
-    def __init__(self, service=None, inversor_id=None, parent=None):
+    def __init__(self, service=None, controller=None, inversor_id=None, parent=None):
         super().__init__(parent)
-        
         self.service = service
+        self.controller = controller
         
         # Estado inicial
         self.inversor_id = inversor_id
@@ -755,44 +755,27 @@ class NuevaCompraDialog(QDialog):
         pass
     
     def cargar_inversores(self):
-        """Carga lista de inversores desde el controller"""
+        """Carga lista de inversores usando formatter"""
         try:
-            logger.debug("Solicitando inversores al controller")
-            
-            if not self.controller:
-                logger.warning("No hay controller, usando datos de prueba")
-                self.cargar_inversores_prueba()
-                return
-            
-            # Usar método del controller
-            inversores = self.controller.obtener_inversores_activos()
-            
-            if not inversores:
-                logger.warning("No se encontraron inversores activos")
-                return
-            
-            self.combo_inversor.clear()
-            self.combo_inversor.addItem("Seleccione...", None)
-            
-            for inversor in inversores:
-                texto = f"{inversor['nombre']} ({inversor['rif_cedula']})"
-                self.combo_inversor.addItem(texto, inversor['id'])
-            
-            logger.info(f"Cargados {len(inversores)} inversores desde controller")
-            
-            # Si hay inversor pre-seleccionado
-            if self.inversor_id:
-                self.pre_seleccionar_inversor(self.inversor_id)
+            if self.controller:
+                # Usar el método formateado del controller
+                inversores = self.controller.obtener_inversores_formateados()
                 
+                self.combo_inversor.clear()
+                self.combo_inversor.addItem("Seleccione...", None)
+                
+                for inv in inversores:
+                    self.combo_inversor.addItem(inv['texto'], inv['id'])
+                
+                logger.info(f"Cargados {len(inversores)} inversores formateados")
+                return
+            
+            # Fallback si no hay controller
+            self.cargar_inversores_prueba()
+            
         except Exception as e:
             logger.error(f"Error al cargar inversores: {e}")
-            import traceback
-            traceback.print_exc()
-            QMessageBox.warning(
-                self,
-                "Error",
-                f"No se pudieron cargar los inversores:\n{str(e)}"
-            )
+            self.cargar_inversores_prueba()
 
     def cargar_cuentas_bursatiles(self, cliente_id: int):
         """Carga cuentas bursátiles desde el controller"""
@@ -833,43 +816,25 @@ class NuevaCompraDialog(QDialog):
             )
     
     def cargar_cuentas_bancarias(self, cliente_id: int):
-        """Carga cuentas bancarias desde el controller"""
+        """Carga cuentas bancarias usando formatter"""
         try:
-            self.combo_cuenta_bancaria.clear()
-            self.combo_cuenta_bancaria.addItem("Seleccione...", None)
-            
-            if not self.controller:
-                logger.warning("No hay controller, usando datos de prueba")
-                self.cargar_cuentas_bancarias_prueba()
+            if self.controller:
+                cuentas = self.controller.obtener_cuentas_bancarias_formateadas(cliente_id)
+                
+                self.combo_cuenta_bancaria.clear()
+                self.combo_cuenta_bancaria.addItem("Seleccione...", None)
+                
+                for cuenta in cuentas:
+                    self.combo_cuenta_bancaria.addItem(cuenta['texto'], cuenta['id'])
+                
+                logger.info(f"Cargadas {len(cuentas)} cuentas bancarias formateadas")
                 return
             
-            cuentas = self.controller.obtener_cuentas_bancarias_cliente(cliente_id)
-            
-            if not cuentas:
-                logger.info(f"Cliente {cliente_id} no tiene cuentas bancarias")
-                QMessageBox.information(
-                    self,
-                    "Sin Cuentas",
-                    "El cliente seleccionado no tiene cuentas bancarias activas."
-                )
-                return
-            
-            for cuenta in cuentas:
-                numero_masked = f"****{cuenta['numero'][-4:]}" if len(cuenta['numero']) >= 4 else cuenta['numero']
-                texto = f"{cuenta['banco_nombre']} - {numero_masked}"
-                if cuenta.get('default'):
-                    texto += " ⭐"
-                self.combo_cuenta_bancaria.addItem(texto, cuenta['id'])
-            
-            logger.info(f"Cargadas {len(cuentas)} cuentas bancarias para cliente {cliente_id}")
+            self.cargar_cuentas_bancarias_prueba()
             
         except Exception as e:
             logger.error(f"Error al cargar cuentas bancarias: {e}")
-            QMessageBox.warning(
-                self,
-                "Error",
-                f"No se pudieron cargar las cuentas bancarias:\n{str(e)}"
-            )
+            self.cargar_cuentas_bancarias_prueba()
     
     def cargar_saldo_disponible(self, cuenta_id: int):
         """Carga saldo disponible desde la base de datos"""

@@ -49,6 +49,7 @@ class OperacionesModule(QStackedWidget):
         
         # Inicializar vista
         self.setCurrentIndex(0)
+        self.controller.actualizar_dashboard()
         
         logger.info("✅ Módulo de Operaciones inicializado")
         self.module_ready.emit()

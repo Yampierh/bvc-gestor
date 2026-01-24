@@ -12,6 +12,7 @@ from PyQt6.QtGui import QColor
 from datetime import datetime, timedelta
 import logging
 
+from ...utils.formatters import DataFormatter
 from ...utils.constants import TipoOrden, EstadoOrden
 
 logger = logging.getLogger(__name__)
@@ -310,27 +311,20 @@ class OperacionesListView(QWidget):
         return filtros
     
     def poblar_tabla(self, ordenes: list):
-        """Puebla la tabla con las órdenes"""
+        """Puebla la tabla con las órdenes usando formatters"""
         self.ordenes = ordenes
         self.tabla_operaciones.setRowCount(len(ordenes))
         
         for row, orden in enumerate(ordenes):
-            # Fecha
+            # Fecha formateada
             fecha_str = orden['fecha_orden']
-            if isinstance(fecha_str, str):
-                try:
-                    fecha = datetime.fromisoformat(fecha_str)
-                    fecha_display = fecha.strftime("%d/%m/%Y")
-                except:
-                    fecha_display = fecha_str
-            else:
-                fecha_display = str(fecha_str)
-            
+            fecha_display = DataFormatter.format_fecha(str(fecha_str))
             self.tabla_operaciones.setItem(row, 0, QTableWidgetItem(fecha_display))
             
-            # Tipo
-            tipo_item = QTableWidgetItem(orden['tipo'])
-            if orden['tipo'] == TipoOrden.COMPRA.value:
+            # Tipo con color
+            tipo = orden['tipo']
+            tipo_item = QTableWidgetItem(tipo)
+            if tipo == "Compra":
                 tipo_item.setForeground(QColor("#4CAF50"))
             else:
                 tipo_item.setForeground(QColor("#F44336"))
@@ -361,9 +355,10 @@ class OperacionesListView(QWidget):
             total_item.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
             self.tabla_operaciones.setItem(row, 6, total_item)
             
-            # Estado
-            estado_item = self._crear_badge_estado(orden['estado'])
-            self.tabla_operaciones.setCellWidget(row, 7, estado_item)
+            # Estado con formatter
+            texto_estado, color, clase = DataFormatter.format_estado_orden(orden['estado'])
+            estado_widget = self._crear_badge_estado(texto_estado, clase)
+            self.tabla_operaciones.setCellWidget(row, 7, estado_widget)
             
             # Acciones
             acciones_widget = self._crear_acciones(orden)
@@ -372,26 +367,15 @@ class OperacionesListView(QWidget):
         # Actualizar totales
         self.lbl_total_ordenes.setText(f"Total: {len(ordenes)} órdenes")
     
-    def _crear_badge_estado(self, estado: str) -> QWidget:
-        """Crea un badge para el estado"""
+    def _crear_badge_estado(self, texto: str, clase_css: str) -> QWidget:
+        """Crea un badge para el estado usando clase CSS"""
         widget = QWidget()
         layout = QHBoxLayout(widget)
         layout.setContentsMargins(5, 0, 5, 0)
         
-        badge = QLabel(estado)
+        badge = QLabel(texto)
         badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        
-        # Estilos según estado
-        if estado == EstadoOrden.EJECUTADA.value:
-            badge.setObjectName("badgeSuccess")
-        elif estado == EstadoOrden.PENDIENTE.value:
-            badge.setObjectName("badgeWarning")
-        elif estado == EstadoOrden.CANCELADA.value:
-            badge.setObjectName("badgeDanger")
-        elif estado == EstadoOrden.ESPERANDO_FONDOS.value:
-            badge.setObjectName("badgeInfo")
-        else:
-            badge.setObjectName("badgeDefault")
+        badge.setObjectName(clase_css)  # Usa la clase CSS del formatter
         
         layout.addWidget(badge)
         return widget

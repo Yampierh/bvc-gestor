@@ -218,7 +218,6 @@ class DataInitializer:
                 "email": "carlos.rodriguez@email.com",
                 "direccion_fiscal": "Av. Principal de Los Ruices, Edificio Centro Plaza, Piso 5, Oficina 501",
                 "ciudad_estado": "Caracas, Distrito Capital",
-                "fecha_vencimiento_rif": date.today() + timedelta(days=365),
             },
             {
                 "nombre_completo": "María Elena González de López",
@@ -228,7 +227,6 @@ class DataInitializer:
                 "email": "maria.gonzalez@email.com",
                 "direccion_fiscal": "Calle Los Jardines, Residencias El Paraíso, Torre B, Apto 12-B",
                 "ciudad_estado": "Maracaibo, Zulia",
-                "fecha_vencimiento_rif": date.today() + timedelta(days=300),
             },
             {
                 "nombre_completo": "Juan Pablo Martínez Rojas",
@@ -238,7 +236,6 @@ class DataInitializer:
                 "email": "juan.martinez@email.com",
                 "direccion_fiscal": "Urbanización La Floresta, Calle Los Pinos, Casa N° 45",
                 "ciudad_estado": "Valencia, Carabobo",
-                "fecha_vencimiento_rif": date.today() + timedelta(days=400),
             },
             # Clientes jurídicos
             {
@@ -249,7 +246,6 @@ class DataInitializer:
                 "email": "info@inversioneselfuturo.com",
                 "direccion_fiscal": "Centro Comercial Sambil, Nivel Oficinas, Local O-12",
                 "ciudad_estado": "Caracas, Distrito Capital",
-                "fecha_vencimiento_rif": date.today() + timedelta(days=200),
             },
             {
                 "nombre_completo": "Constructora Edifica C.A.",
@@ -259,7 +255,6 @@ class DataInitializer:
                 "email": "contacto@constructoraedifica.com",
                 "direccion_fiscal": "Zona Industrial Norte, Galpón N° 7",
                 "ciudad_estado": "Valencia, Carabobo",
-                "fecha_vencimiento_rif": date.today() + timedelta(days=180),
             },
             {
                 "nombre_completo": "Distribuidora de Alimentos La Prosperidad C.A.",
@@ -269,7 +264,6 @@ class DataInitializer:
                 "email": "ventas@laprosperidad.com",
                 "direccion_fiscal": "Av. Circunvalación N° 2, Edificio Industrial, Piso 3",
                 "ciudad_estado": "Maracay, Aragua",
-                "fecha_vencimiento_rif": date.today() + timedelta(days=220),
             },
             # Más clientes
             {
@@ -280,7 +274,6 @@ class DataInitializer:
                 "email": "ana.contreras@email.com",
                 "direccion_fiscal": "Urbanización El Recreo, Calle Los Olivos, Residencia Los Geranios",
                 "ciudad_estado": "Barquisimeto, Lara",
-                "fecha_vencimiento_rif": date.today() + timedelta(days=320),
             },
             {
                 "nombre_completo": "Luis Fernando Díaz Mendoza",
@@ -290,7 +283,6 @@ class DataInitializer:
                 "email": "luis.diaz@email.com",
                 "direccion_fiscal": "Conjunto Residencial Los Caobos, Torre 2, Apto 804",
                 "ciudad_estado": "Puerto La Cruz, Anzoátegui",
-                "fecha_vencimiento_rif": date.today() + timedelta(days=280),
             },
             {
                 "nombre_completo": "Consultores Asociados S.C.",
@@ -300,7 +292,6 @@ class DataInitializer:
                 "email": "consultores@consultoresasociados.com",
                 "direccion_fiscal": "Torre Financiera, Av. Francisco de Miranda, Piso 15",
                 "ciudad_estado": "Caracas, Distrito Capital",
-                "fecha_vencimiento_rif": date.today() + timedelta(days=240),
             },
             {
                 "nombre_completo": "Importadora Exportadora Global Trade C.A.",
@@ -310,7 +301,6 @@ class DataInitializer:
                 "email": "info@globaltrade.com",
                 "direccion_fiscal": "Zona Franca Industrial, Módulo 12",
                 "ciudad_estado": "Puerto Cabello, Carabobo",
-                "fecha_vencimiento_rif": date.today() + timedelta(days=260),
             }
         ]
         

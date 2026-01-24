@@ -156,9 +156,6 @@ class ClienteDB(Base, AuditMixin):
         nullable=False
     )
     
-    # Fecha de vencimiento del documento de identificación
-    fecha_vencimiento_rif: Mapped[datetime] = mapped_column(DateTime)
-    
     # Información de contacto
     telefono: Mapped[str] = mapped_column(String(20), nullable=False)
     email: Mapped[str] = mapped_column(String(100), nullable=False)

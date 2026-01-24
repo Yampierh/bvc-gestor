@@ -13,6 +13,8 @@ from PyQt6.QtGui import QColor
 from datetime import datetime
 import logging
 
+from ...utils.formatters import DataFormatter
+
 logger = logging.getLogger(__name__)
 
 
@@ -301,42 +303,98 @@ class OperacionesDashboard(QWidget):
     
     # ==================== MÉTODOS PÚBLICOS (llamados por controller) ====================
     
-    def poblar_inversores(self, inversores: list):
-        """Puebla el combo de inversores"""
-        self.inversores = inversores
+    def poblar_inversores(self, inversores_formateados: list):
+        """
+        Puebla el combo de inversores con datos ya formateados.
+        
+        Args:
+            inversores_formateados: Lista de dicts con 'id', 'texto', 'tooltip'
+        """
+        logger.info(f"📥 poblar_inversores: {len(inversores_formateados)} inversores")
+        
+        self.inversores = inversores_formateados
         self.combo_inversor.clear()
+        self.combo_inversor.addItem("👤 Seleccione un inversor...", None)
         
-        for inv in inversores:
-            self.combo_inversor.addItem(
-                inv.get('nombre_completo', 'Sin nombre'),
-                inv.get('id')
-            )
+        if not inversores_formateados:
+            logger.warning("⚠️ No hay inversores para mostrar")
+            return
         
-        logger.info(f"✅ {len(inversores)} inversores cargados")
+        for inv in inversores_formateados:
+            # Agregar al combobox
+            index = self.combo_inversor.count()
+            self.combo_inversor.addItem(inv.get('texto', 'Sin nombre'), inv.get('id'))
+            
+            # Añadir tooltip si existe
+            if 'tooltip' in inv:
+                self.combo_inversor.setItemData(index, inv['tooltip'], 
+                                               Qt.ItemDataRole.ToolTipRole)
+        
+        logger.info(f"✅ Combo inversor: {len(inversores_formateados)} opciones")
     
-    def poblar_cuentas_bursatiles(self, cuentas: list):
-        """Puebla el combo de casas de bolsa"""
-        self.cuentas_bursatiles = cuentas
+    def poblar_cuentas_bursatiles(self, cuentas_formateadas: list):
+        """
+        Puebla el combo de casas de bolsa con datos ya formateados.
+        
+        Args:
+            cuentas_formateadas: Lista de dicts con 'id', 'texto', 'tooltip'
+        """
+        logger.info(f"📥 poblar_cuentas_bursatiles: {len(cuentas_formateadas)} cuentas")
+        
+        self.cuentas_bursatiles = cuentas_formateadas
         self.combo_casa_bolsa.clear()
+        self.combo_casa_bolsa.addItem("📈 Seleccione cuenta bursátil...", None)
         
-        for cuenta in cuentas:
-            texto = f"{cuenta.get('casa_bolsa')} - {cuenta.get('numero_cuenta')}"
-            self.combo_casa_bolsa.addItem(texto, cuenta.get('id'))
+        if not cuentas_formateadas:
+            logger.warning("⚠️ No hay cuentas bursátiles")
+            self.combo_casa_bolsa.setEnabled(False)
+            return
         
-        self.combo_casa_bolsa.setEnabled(len(cuentas) > 0)
-        logger.info(f"✅ {len(cuentas)} cuentas bursátiles cargadas")
+        for cuenta in cuentas_formateadas:
+            # Agregar al combobox
+            index = self.combo_casa_bolsa.count()
+            self.combo_casa_bolsa.addItem(cuenta.get('texto', 'Sin número'), 
+                                         cuenta.get('id'))
+            
+            # Añadir tooltip si existe
+            if 'tooltip' in cuenta:
+                self.combo_casa_bolsa.setItemData(index, cuenta['tooltip'], 
+                                                 Qt.ItemDataRole.ToolTipRole)
+        
+        self.combo_casa_bolsa.setEnabled(True)
+        logger.info(f"✅ Combo casas de bolsa: {len(cuentas_formateadas)} opciones")
     
-    def poblar_cuentas_bancarias(self, cuentas: list):
-        """Puebla el combo de cuentas bancarias"""
-        self.cuentas_bancarias = cuentas
+    def poblar_cuentas_bancarias(self, cuentas_formateadas: list):
+        """
+        Puebla el combo de cuentas bancarias con datos ya formateados.
+        
+        Args:
+            cuentas_formateadas: Lista de dicts con 'id', 'texto', 'tooltip'
+        """
+        logger.info(f"📥 poblar_cuentas_bancarias: {len(cuentas_formateadas)} cuentas")
+        
+        self.cuentas_bancarias = cuentas_formateadas
         self.combo_cuenta_bancaria.clear()
+        self.combo_cuenta_bancaria.addItem("🏦 Seleccione cuenta bancaria...", None)
         
-        for cuenta in cuentas:
-            texto = f"{cuenta.get('banco')} - {cuenta.get('numero_cuenta')}"
-            self.combo_cuenta_bancaria.addItem(texto, cuenta.get('id'))
+        if not cuentas_formateadas:
+            logger.warning("⚠️ No hay cuentas bancarias")
+            self.combo_cuenta_bancaria.setEnabled(False)
+            return
         
-        self.combo_cuenta_bancaria.setEnabled(len(cuentas) > 0)
-        logger.info(f"✅ {len(cuentas)} cuentas bancarias cargadas")
+        for cuenta in cuentas_formateadas:
+            # Agregar al combobox
+            index = self.combo_cuenta_bancaria.count()
+            self.combo_cuenta_bancaria.addItem(cuenta.get('texto', 'Sin número'), 
+                                                cuenta.get('id'))
+            
+            # Añadir tooltip si existe
+            if 'tooltip' in cuenta:
+                self.combo_cuenta_bancaria.setItemData(index, cuenta['tooltip'], 
+                                                    Qt.ItemDataRole.ToolTipRole)
+        
+        self.combo_cuenta_bancaria.setEnabled(True)
+        logger.info(f"✅ Combo cuentas bancarias: {len(cuentas_formateadas)} opciones")
     
     def actualizar_metrica_portafolio(self, valor: float):
         """Actualiza la métrica de valor del portafolio"""
